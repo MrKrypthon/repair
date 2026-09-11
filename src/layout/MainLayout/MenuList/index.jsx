@@ -20,16 +20,19 @@ function MenuList() {
 
   const [selectedID, setSelectedID] = useState('');
 
+  const currentRole = JSON.parse(localStorage.getItem('electronica-tech-user') || '{}').role;
+  const visibleItems = menuItems.items.filter((item) => !(item.id === 'dashboard' && currentRole === 'TECHNICIAN'));
+
   const lastItem = null;
 
-  let lastItemIndex = menuItems.items.length - 1;
+  let lastItemIndex = visibleItems.length - 1;
   let remItems = [];
   let lastItemId;
 
-  if (lastItem && lastItem < menuItems.items.length) {
-    lastItemId = menuItems.items[lastItem - 1].id;
+  if (lastItem && lastItem < visibleItems.length) {
+    lastItemId = visibleItems[lastItem - 1].id;
     lastItemIndex = lastItem - 1;
-    remItems = menuItems.items.slice(lastItem - 1, menuItems.items.length).map((item) => ({
+    remItems = visibleItems.slice(lastItem - 1, visibleItems.length).map((item) => ({
       title: item.title,
       elements: item.children,
       icon: item.icon,
@@ -39,7 +42,7 @@ function MenuList() {
     }));
   }
 
-  const navItems = menuItems.items.slice(0, lastItemIndex + 1).map((item, index) => {
+  const navItems = visibleItems.slice(0, lastItemIndex + 1).map((item, index) => {
     switch (item.type) {
       case 'group':
         if (item.url && item.id !== lastItemId) {

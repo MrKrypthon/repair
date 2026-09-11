@@ -20,6 +20,6 @@ export class InventoryController {
 
   @Patch(':id/stock')
   @UseGuards(RolesGuard)
-  @Roles('ADMIN', 'RECEPTIONIST', 'TECHNICIAN')
+  @Roles('ADMIN', 'RECEPTIONIST')
   adjustStock(@Param('id') id: string, @Body() body: StockChangeDto) { return this.inventoryService.adjustStock(id, body); }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import ReactApexChart from 'react-apexcharts';
 
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
@@ -84,13 +84,17 @@ function WorkshopCharts({ dashboard }) {
 }
 
 export default function Dashboard() {
+  const isTechnician = JSON.parse(localStorage.getItem('electronica-tech-user') || '{}').role === 'TECHNICIAN';
   const [dashboard, setDashboard] = useState(null);
   const [recentOrders, setRecentOrders] = useState(orders);
   const [error, setError] = useState('');
   useEffect(() => {
+    if (isTechnician) return;
     api.getDashboardMetrics().then(setDashboard).catch(() => setError('Mostrando valores de ejemplo. No se pudo cargar la analítica.'));
     api.listServiceOrders().then((records) => setRecentOrders(records.slice(0, 5).map((order) => ({ folio: order.folio, device: `${order.device.brand} · ${order.device.model}`, customer: order.customer.name, status: statusPresentation[order.status]?.[0] || order.status, tone: statusPresentation[order.status]?.[1] || 'default', date: new Date(order.updatedAt || order.receivedAt).toLocaleDateString('es-MX') })))).catch(() => {});
-  }, []);
+  }, [isTechnician]);
+
+  if (isTechnician) return <Navigate to="/service-orders" replace />;
   const currentMetrics = dashboard ? [
     { label: 'En reparación', value: dashboard.inRepair, detail: `${dashboard.receivedToday} recibidas hoy`, icon: BuildRoundedIcon, color: 'primary.main', bg: 'primary.lighter' },
     { label: 'Listos para entregar', value: dashboard.ready, detail: `${dashboard.pendingAuthorization} presupuestos pendientes`, icon: CheckCircleRoundedIcon, color: 'success.dark', bg: 'success.lighter' },

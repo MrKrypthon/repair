@@ -35,7 +35,7 @@ export default function AuthLogin() {
     api.login({ email, password }).then((result) => {
       localStorage.setItem('electronica-tech-token', result.accessToken);
       localStorage.setItem('electronica-tech-user', JSON.stringify(result.user));
-      navigate('/dashboard');
+      navigate(result.user.role === 'TECHNICIAN' ? '/service-orders' : '/dashboard');
     }).catch(() => setError('Correo o contraseña incorrectos.')).finally(() => setLoading(false));
   };
 

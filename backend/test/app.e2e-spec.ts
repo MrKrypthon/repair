@@ -86,4 +86,35 @@ describe('Electrónica Tech API (e2e)', () => {
       .attach('file', Buffer.from('no es una imagen'), { filename: 'nota.txt', contentType: 'text/plain' })
       .expect(400);
   });
+
+  it('enforces role limits: only admin/recepción authorize budgets, view the dashboard, or adjust stock manually', async () => {
+    const adminLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const adminToken = adminLogin.body.accessToken;
+    const suffix = Date.now();
+
+    await request(app.getHttpServer()).post('/api/users').set('Authorization', `Bearer ${adminToken}`).send({ name: 'E2E Técnico', email: `e2e-tech-${suffix}@test.local`, password: 'Tecnico123!', role: 'TECHNICIAN' }).expect(201);
+    const techLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: `e2e-tech-${suffix}@test.local`, password: 'Tecnico123!' }).expect(201);
+    const techToken = techLogin.body.accessToken;
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${adminToken}`).send({ name: 'E2E Cliente Roles', phone: `557${suffix}`, email: `e2e-roles-${suffix}@test.local` }).expect(201);
+    const order = await request(app.getHttpServer()).post('/api/service-orders').set('Authorization', `Bearer ${adminToken}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'Test', model: 'E2E Roles', reportedIssue: 'No carga', priority: 'NORMAL' }).expect(201);
+    const item = await request(app.getHttpServer()).post('/api/inventory').set('Authorization', `Bearer ${adminToken}`).send({ name: `Pieza Roles ${suffix}`, sku: `ROLES-${suffix}`, category: 'Test', cost: 10, salePrice: 25, stock: 5, minimumStock: 1 }).expect(201);
+
+    // el técnico puede cargar el desglose de costos sin cambiar la autorización
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order.body.folio}/budget`).set('Authorization', `Bearer ${techToken}`).send({ partsCost: 100, laborCost: 50, otherCharges: 0 }).expect(200);
+    // pero no puede autorizar ni rechazar el presupuesto
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order.body.folio}/budget`).set('Authorization', `Bearer ${techToken}`).send({ partsCost: 100, laborCost: 50, otherCharges: 0, budgetStatus: 'APPROVED' }).expect(403);
+    // administración sí puede
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order.body.folio}/budget`).set('Authorization', `Bearer ${adminToken}`).send({ partsCost: 100, laborCost: 50, otherCharges: 0, budgetStatus: 'APPROVED' }).expect(200);
+
+    // el técnico sigue pudiendo consumir piezas dentro de una orden
+    await request(app.getHttpServer()).post(`/api/service-orders/${order.body.folio}/parts`).set('Authorization', `Bearer ${techToken}`).send({ inventoryItemId: item.body.id, quantity: 1 }).expect(201);
+    // pero no puede hacer ajustes manuales de stock
+    await request(app.getHttpServer()).patch(`/api/inventory/${item.body.id}/stock`).set('Authorization', `Bearer ${techToken}`).send({ type: 'IN', quantity: 1 }).expect(403);
+    await request(app.getHttpServer()).patch(`/api/inventory/${item.body.id}/stock`).set('Authorization', `Bearer ${adminToken}`).send({ type: 'IN', quantity: 1 }).expect(200);
+
+    // el técnico no puede ver el dashboard financiero
+    await request(app.getHttpServer()).get('/api/analytics/dashboard').set('Authorization', `Bearer ${techToken}`).expect(403);
+    await request(app.getHttpServer()).get('/api/analytics/dashboard').set('Authorization', `Bearer ${adminToken}`).expect(200);
+  });
 });

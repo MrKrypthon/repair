@@ -15,7 +15,7 @@ npm run start:dev
 
 Usuario inicial de desarrollo: `admin@electronicatech.local` / `Admin123!`. Debe cambiarse antes de un despliegue real.
 
-Permisos iniciales: `ADMIN` puede operar todo; `RECEPTIONIST` puede crear clientes y órdenes; `TECHNICIAN` puede consultar órdenes y actualizar sus estados.
+Permisos: `ADMIN` puede operar todo. `RECEPTIONIST` puede crear/editar clientes y órdenes, registrar pagos y autorizar presupuestos. `TECHNICIAN` puede editar datos de la orden, cambiar estados, diagnosticar, adjuntar fotos/documentos, cargar el desglose de costos y consumir piezas dentro de una orden — pero no puede autorizar/rechazar presupuestos, hacer ajustes manuales de stock ni ver el dashboard financiero. Detalle completo en `STATUS.md`.
 
 La API queda disponible en `http://localhost:3001/api`.
 

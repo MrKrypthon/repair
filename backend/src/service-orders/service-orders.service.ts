@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { AttachmentCategory, BudgetStatus, DeviceCategory, Prisma, ServiceOrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -86,7 +86,11 @@ export class ServiceOrdersService {
     });
   }
 
-  updateBudget(folio: string, data: { partsCost: number; laborCost: number; otherCharges: number; budgetStatus: BudgetStatus; finalCost?: number }) {
+  async updateBudget(folio: string, data: { partsCost: number; laborCost: number; otherCharges: number; budgetStatus?: BudgetStatus; finalCost?: number }, requesterRole?: string) {
+    const order = await this.prisma.serviceOrder.findUniqueOrThrow({ where: { folio } });
+    if (data.budgetStatus !== undefined && data.budgetStatus !== order.budgetStatus && requesterRole === 'TECHNICIAN') {
+      throw new ForbiddenException('Solo administración o recepción pueden autorizar o rechazar el presupuesto');
+    }
     const partsCost = new Prisma.Decimal(data.partsCost || 0);
     const laborCost = new Prisma.Decimal(data.laborCost || 0);
     const otherCharges = new Prisma.Decimal(data.otherCharges || 0);

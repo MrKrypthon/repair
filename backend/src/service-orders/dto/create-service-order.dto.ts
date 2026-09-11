@@ -18,7 +18,7 @@ export class UpdateBudgetDto {
   @IsNumber() @Min(0) partsCost!: number;
   @IsNumber() @Min(0) laborCost!: number;
   @IsNumber() @Min(0) otherCharges!: number;
-  @IsEnum(BudgetStatus) budgetStatus!: BudgetStatus;
+  @IsOptional() @IsEnum(BudgetStatus) budgetStatus?: BudgetStatus;
   @IsOptional() @IsNumber() @Min(0) finalCost?: number;
 }
 

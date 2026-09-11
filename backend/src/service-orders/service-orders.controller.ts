@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -53,8 +53,8 @@ export class ServiceOrdersController {
   @Patch(':folio/budget')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST', 'TECHNICIAN')
-  updateBudget(@Param('folio') folio: string, @Body() body: UpdateBudgetDto) {
-    return this.serviceOrdersService.updateBudget(folio, body);
+  updateBudget(@Param('folio') folio: string, @Body() body: UpdateBudgetDto, @Req() request: { user: { role: string } }) {
+    return this.serviceOrdersService.updateBudget(folio, body, request.user.role);
   }
 
   @Post(':folio/parts')

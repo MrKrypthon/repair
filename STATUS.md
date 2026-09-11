@@ -134,11 +134,29 @@ Inventario, agenda, notificaciones y base de conocimiento técnica quedan en fas
 
 `User`, `Customer`, `Device`, `ServiceOrder`, `StatusHistory`, `Payment`, `InventoryItem`, `InventoryMovement`, `OrderPart`, `TechnicalDocument` y `TechnicalNote`.
 
+## Roles y permisos
+
+| Acción | Admin | Recepción | Técnico |
+| --- | --- | --- | --- |
+| Crear/editar clientes, equipos, órdenes | ✅ | ✅ | — |
+| Editar datos de una orden (falla, prioridad, equipo, entrega estimada) | ✅ | ✅ | ✅ |
+| Cambiar estado de una orden | ✅ | ✅ | ✅ |
+| Diagnóstico, notas técnicas, fotos/documentos | ✅ | fotos/documentos | ✅ |
+| Cargar desglose de presupuesto (piezas/mano de obra) | ✅ | ✅ | ✅ |
+| **Autorizar o rechazar un presupuesto** | ✅ | ✅ | ❌ |
+| Consumir piezas dentro de una orden (descuenta stock) | ✅ | ✅ | ✅ |
+| **Ajuste manual de stock** (entrada/salida fuera de una orden) | ✅ | ✅ | ❌ |
+| Registrar pagos | ✅ | ✅ | — |
+| **Ver dashboard financiero** (ganancia, margen, cobros) | ✅ | ✅ | ❌ |
+| Gestionar usuarios y roles | ✅ | — | — |
+| Archivar clientes | ✅ | — | — |
+
+El técnico, al iniciar sesión, va directo a "Órdenes de servicio" en lugar del dashboard, y no ve la opción de Dashboard en el menú.
+
 ## Decisiones pendientes
 
 - ¿La primera instalación será para un único taller o debe soportar multiempresa desde el inicio?
 - ¿Qué moneda, zona horaria e impuestos se utilizarán?
-- ¿Qué roles exactos pueden autorizar presupuestos y registrar pagos?
 - ¿Se almacenará algún dato sensible del dispositivo o solo se marcará como entregado al técnico?
 - ¿Qué proveedor de correo, WhatsApp y almacenamiento se usará en producción?
 
@@ -171,3 +189,5 @@ Inventario, agenda, notificaciones y base de conocimiento técnica quedan en fas
 - Se corrigió el CI tras el primer push: `bitnami/minio:latest` ya no existe en Docker Hub; se reemplazó por un contenedor MinIO levantado manualmente (`docker run`) más creación de bucket con `minio/mc`, verificado localmente antes de subir el fix.
 - Se añadió edición de orden desde la interfaz (`PATCH /api/service-orders/:folio`): falla reportada, prioridad, fecha estimada de entrega y datos del equipo (categoría, marca, modelo, color, número de serie, IMEI).
 - Se detectó y corrigió un gap real en las pruebas e2e: el `ValidationPipe` global de `main.ts` nunca se aplicaba a la app de pruebas, por lo que la validación de DTOs no se ejercitaba de verdad.
+- Se definieron y aplicaron los roles y permisos: solo Admin/Recepción pueden autorizar o rechazar presupuestos, ver el dashboard financiero y hacer ajustes manuales de inventario; Técnico conserva la carga de costos, el cambio de estado y el consumo de piezas dentro de una orden. Ver tabla completa en la sección "Roles y permisos".
+- Se ocultó el Dashboard del menú y la redirección de login para el rol Técnico, que ahora entra directo a Órdenes de servicio.
