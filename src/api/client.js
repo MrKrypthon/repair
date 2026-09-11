@@ -11,6 +11,15 @@ async function request(path, options = {}) {
     ...options
   });
 
+  if (response.status === 401 && path !== '/auth/login') {
+    localStorage.removeItem('electronica-tech-token');
+    localStorage.removeItem('electronica-tech-user');
+    if (!window.location.pathname.startsWith('/pages/login')) {
+      window.location.href = '/pages/login';
+    }
+    throw new Error('Tu sesión expiró. Inicia sesión de nuevo.');
+  }
+
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || `Error ${response.status}`);
