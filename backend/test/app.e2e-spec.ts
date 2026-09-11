@@ -170,4 +170,39 @@ describe('Electrónica Tech API (e2e)', () => {
     expect(publicView.body.attachments[0].url).toEqual(expect.any(String));
     expect(publicView.body.statusHistory).toHaveLength(1);
   });
+
+  it('computes finance summary from payments and received purchase orders, and restricts it to admin', async () => {
+    const adminLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const adminToken = adminLogin.body.accessToken;
+    const suffix = Date.now();
+
+    await request(app.getHttpServer()).post('/api/users').set('Authorization', `Bearer ${adminToken}`).send({ name: 'E2E Recepción', email: `e2e-recep-${suffix}@test.local`, password: 'Recepcion123!', role: 'RECEPTIONIST' }).expect(201);
+    const recepLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: `e2e-recep-${suffix}@test.local`, password: 'Recepcion123!' }).expect(201);
+    const recepToken = recepLogin.body.accessToken;
+
+    await request(app.getHttpServer()).get('/api/finance/summary').set('Authorization', `Bearer ${recepToken}`).expect(403);
+
+    const before = await request(app.getHttpServer()).get('/api/finance/summary').set('Authorization', `Bearer ${adminToken}`).expect(200);
+    const baseIncome = before.body.income;
+    const baseExpenses = before.body.expenses;
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${adminToken}`).send({ name: 'E2E Cliente Finanzas', phone: `559${suffix}`, email: `e2e-fin-${suffix}@test.local` }).expect(201);
+    const order = await request(app.getHttpServer()).post('/api/service-orders').set('Authorization', `Bearer ${adminToken}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'Test', model: 'E2E Finanzas', reportedIssue: 'No enciende', priority: 'NORMAL' }).expect(201);
+    await request(app.getHttpServer()).post(`/api/service-orders/${order.body.folio}/payments`).set('Authorization', `Bearer ${adminToken}`).send({ amount: 150, method: 'CASH', type: 'DEPOSIT' }).expect(201);
+
+    const supplier = await request(app.getHttpServer()).post('/api/suppliers').set('Authorization', `Bearer ${adminToken}`).send({ name: `Proveedor E2E ${suffix}` }).expect(201);
+    const item = await request(app.getHttpServer()).post('/api/inventory').set('Authorization', `Bearer ${adminToken}`).send({ name: `Pieza Finanzas ${suffix}`, sku: `FIN-${suffix}`, category: 'Test', cost: 10, salePrice: 25, stock: 0, minimumStock: 0 }).expect(201);
+    const purchaseOrder = await request(app.getHttpServer()).post('/api/purchase-orders').set('Authorization', `Bearer ${adminToken}`).send({ supplierId: supplier.body.id, lines: [{ inventoryItemId: item.body.id, quantity: 3, unitCost: 20 }] }).expect(201);
+    await request(app.getHttpServer()).patch(`/api/purchase-orders/${purchaseOrder.body.id}/order`).set('Authorization', `Bearer ${adminToken}`).expect(200);
+    await request(app.getHttpServer()).patch(`/api/purchase-orders/${purchaseOrder.body.id}/receive`).set('Authorization', `Bearer ${adminToken}`).expect(200);
+
+    const after = await request(app.getHttpServer()).get('/api/finance/summary').set('Authorization', `Bearer ${adminToken}`).expect(200);
+    expect(after.body.income).toBeCloseTo(baseIncome + 150);
+    expect(after.body.expenses).toBeCloseTo(baseExpenses + 60);
+    expect(after.body.netProfit).toBeCloseTo(after.body.income - after.body.expenses);
+    expect(after.body.isProfit).toBe(after.body.netProfit >= 0);
+    expect(after.body.monthly).toHaveLength(12);
+    expect(after.body.movements.some((movement: { type: string; description: string }) => movement.type === 'INCOME' && movement.description.includes(order.body.folio))).toBe(true);
+    expect(after.body.movements.some((movement: { type: string; description: string }) => movement.type === 'EXPENSE' && movement.description.includes(purchaseOrder.body.folio))).toBe(true);
+  });
 });

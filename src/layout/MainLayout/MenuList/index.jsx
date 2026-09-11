@@ -21,7 +21,7 @@ function MenuList() {
   const [selectedID, setSelectedID] = useState('');
 
   const currentRole = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role;
-  const visibleItems = menuItems.items.filter((item) => !(item.id === 'dashboard' && currentRole === 'TECHNICIAN'));
+  const visibleItems = menuItems.items.filter((item) => !(item.id === 'dashboard' && currentRole === 'TECHNICIAN') && !(item.id === 'finance' && currentRole !== 'ADMIN'));
 
   const lastItem = null;
 

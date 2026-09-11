@@ -82,5 +82,12 @@ export const api = {
   createAppointment: (data) => request('/appointments', { method: 'POST', body: JSON.stringify(data) }),
   listTechnicalKnowledge: (query = '') => request(`/technical-knowledge${query ? `?q=${encodeURIComponent(query)}` : ''}`),
   createTechnicalDocument: (data) => request('/technical-knowledge', { method: 'POST', body: JSON.stringify(data) }),
-  getDashboardMetrics: () => request('/analytics/dashboard')
+  getDashboardMetrics: () => request('/analytics/dashboard'),
+  getFinanceSummary: (from, to) => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const query = params.toString();
+    return request(`/finance/summary${query ? `?${query}` : ''}`);
+  }
 };
