@@ -43,7 +43,7 @@ jobs:
             -p 9000:9000 \
             -e MINIO_ROOT_USER=electronica \
             -e MINIO_ROOT_PASSWORD=electronica_ci_minio \
-            minio/minio server /data
+            quay.io/minio/minio server /data
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -72,7 +72,7 @@ jobs:
 
       - name: Create MinIO bucket
         run: |
-          docker run --rm --network host --entrypoint sh minio/mc:latest -c "
+          docker run --rm --network host --entrypoint sh quay.io/minio/mc:latest -c "
             mc alias set local http://localhost:9000 electronica electronica_ci_minio &&
             mc mb -p local/electronica-tech-attachments
           "

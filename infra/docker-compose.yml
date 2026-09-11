@@ -13,7 +13,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: electronica-tech-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -32,7 +32,7 @@ services:
       retries: 10
 
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     container_name: electronica-tech-minio-init
     depends_on:
       minio:
