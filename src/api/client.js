@@ -45,9 +45,15 @@ export const api = {
   updateServiceOrderStatus: (folio, data) => request(`/service-orders/${folio}/status`, { method: 'PATCH', body: JSON.stringify(data) }),
   createPayment: (folio, data) => request(`/service-orders/${folio}/payments`, { method: 'POST', body: JSON.stringify(data) }),
   updateServiceOrderBudget: (folio, data) => request(`/service-orders/${folio}/budget`, { method: 'PATCH', body: JSON.stringify(data) }),
-  listInventory: () => request('/inventory'),
+  listInventory: (query = '') => request(`/inventory${query ? `?q=${encodeURIComponent(query)}` : ''}`),
   createInventoryItem: (data) => request('/inventory', { method: 'POST', body: JSON.stringify(data) }),
   adjustInventory: (id, data) => request(`/inventory/${id}/stock`, { method: 'PATCH', body: JSON.stringify(data) }),
+  uploadInventoryImage: (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request(`/inventory/${id}/image`, { method: 'POST', body: formData });
+  },
+  removeInventoryImage: (id) => request(`/inventory/${id}/image`, { method: 'DELETE' }),
   addOrderPart: (folio, data) => request(`/service-orders/${folio}/parts`, { method: 'POST', body: JSON.stringify(data) }),
   updateDiagnosis: (folio, data) => request(`/service-orders/${folio}/diagnosis`, { method: 'PATCH', body: JSON.stringify(data) }),
   assignTechnician: (folio, technicianId) => request(`/service-orders/${folio}/technician`, { method: 'PATCH', body: JSON.stringify({ technicianId: technicianId || undefined }) }),

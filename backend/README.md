@@ -64,8 +64,11 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `POST /api/service-orders/:folio/payments`: registra un pago para una orden.
 - `PATCH /api/service-orders/:folio/budget`: calcula y guarda el presupuesto de una orden.
 - `GET /api/inventory`: consulta piezas y existencias.
+- `GET /api/inventory?q=...`: busca piezas por nombre, SKU o categoría.
 - `POST /api/inventory`: crea una pieza o consumible.
 - `PATCH /api/inventory/:id/stock`: registra entrada, salida o ajuste de stock.
+- `POST /api/inventory/:id/image`: sube o reemplaza la foto del producto (JPG/PNG/WEBP, máx. 5MB).
+- `DELETE /api/inventory/:id/image`: elimina la foto del producto.
 - `POST /api/service-orders/:folio/parts`: consume una pieza y descuenta el stock de forma transaccional.
 - `PATCH /api/service-orders/:folio/diagnosis`: guarda diagnóstico, causa probable y checklist técnico.
 - `GET /api/appointments`: consulta la agenda ordenada por fecha.

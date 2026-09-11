@@ -117,4 +117,36 @@ describe('Electrónica Tech API (e2e)', () => {
     await request(app.getHttpServer()).get('/api/analytics/dashboard').set('Authorization', `Bearer ${techToken}`).expect(403);
     await request(app.getHttpServer()).get('/api/analytics/dashboard').set('Authorization', `Bearer ${adminToken}`).expect(200);
   });
+
+  it('supports product images and search in inventory', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+
+    const item = await request(app.getHttpServer()).post('/api/inventory').set('Authorization', `Bearer ${token}`).send({ name: `Pantalla Buscable ${suffix}`, sku: `IMG-${suffix}`, category: 'Pantallas', cost: 100, salePrice: 200, stock: 5, minimumStock: 1 }).expect(201);
+    expect(item.body.imageUrl).toBeNull();
+
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+    const withImage = await request(app.getHttpServer())
+      .post(`/api/inventory/${item.body.id}/image`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('file', png, { filename: 'producto.png', contentType: 'image/png' })
+      .expect(201);
+    expect(withImage.body.imageUrl).toEqual(expect.any(String));
+
+    await request(app.getHttpServer())
+      .post(`/api/inventory/${item.body.id}/image`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('file', Buffer.from('no es una imagen'), { filename: 'nota.txt', contentType: 'text/plain' })
+      .expect(400);
+
+    const found = await request(app.getHttpServer()).get(`/api/inventory?q=${encodeURIComponent(`Buscable ${suffix}`)}`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(found.body.map((record: { id: string }) => record.id)).toContain(item.body.id);
+
+    const notFound = await request(app.getHttpServer()).get('/api/inventory?q=zzz-no-existe-en-ningun-lado').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(notFound.body).toHaveLength(0);
+
+    const withoutImage = await request(app.getHttpServer()).delete(`/api/inventory/${item.body.id}/image`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(withoutImage.body.imageUrl).toBeNull();
+  });
 });

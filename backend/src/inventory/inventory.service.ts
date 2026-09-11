@@ -1,18 +1,31 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InventoryMovementType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 
 type CreateItem = { name: string; sku: string; category: string; cost: number; salePrice: number; stock?: number; minimumStock?: number; supplierId?: string };
 type StockChange = { type: InventoryMovementType; quantity: number; note?: string };
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService
+  ) {}
 
-  findAll() { return this.prisma.inventoryItem.findMany({ include: { supplier: true, movements: { orderBy: { createdAt: 'desc' }, take: 5 } }, orderBy: { name: 'asc' } }); }
+  private withImageUrl<T extends { imageKey: string | null }>(item: T) {
+    return { ...item, imageUrl: item.imageKey ? this.storage.getUrl(item.imageKey) : null };
+  }
 
-  create(data: CreateItem) {
-    return this.prisma.inventoryItem.create({ data: { ...data, cost: new Prisma.Decimal(data.cost), salePrice: new Prisma.Decimal(data.salePrice) } });
+  async findAll(query?: string) {
+    const filter: Prisma.InventoryItemWhereInput = query ? { OR: [{ name: { contains: query, mode: 'insensitive' } }, { sku: { contains: query, mode: 'insensitive' } }, { category: { contains: query, mode: 'insensitive' } }] } : {};
+    const items = await this.prisma.inventoryItem.findMany({ where: filter, include: { supplier: true, movements: { orderBy: { createdAt: 'desc' }, take: 5 } }, orderBy: { name: 'asc' } });
+    return items.map((item) => this.withImageUrl(item));
+  }
+
+  async create(data: CreateItem) {
+    const item = await this.prisma.inventoryItem.create({ data: { ...data, cost: new Prisma.Decimal(data.cost), salePrice: new Prisma.Decimal(data.salePrice) } });
+    return this.withImageUrl(item);
   }
 
   async adjustStock(id: string, data: StockChange) {
@@ -24,5 +37,21 @@ export class InventoryService {
       await transaction.inventoryMovement.create({ data: { inventoryItemId: id, type: data.type, quantity: data.quantity, note: data.note } });
       return transaction.inventoryItem.update({ where: { id }, data: { stock: nextStock } });
     });
+  }
+
+  async uploadImage(id: string, file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Debes adjuntar una imagen');
+    const item = await this.prisma.inventoryItem.findUniqueOrThrow({ where: { id } });
+    const key = await this.storage.upload(`inventory/${id}`, file.originalname, file.mimetype, file.buffer);
+    if (item.imageKey) await this.storage.remove(item.imageKey).catch(() => {});
+    const updated = await this.prisma.inventoryItem.update({ where: { id }, data: { imageKey: key } });
+    return this.withImageUrl(updated);
+  }
+
+  async removeImage(id: string) {
+    const item = await this.prisma.inventoryItem.findUniqueOrThrow({ where: { id } });
+    if (item.imageKey) await this.storage.remove(item.imageKey).catch(() => {});
+    const updated = await this.prisma.inventoryItem.update({ where: { id }, data: { imageKey: null } });
+    return this.withImageUrl(updated);
   }
 }
