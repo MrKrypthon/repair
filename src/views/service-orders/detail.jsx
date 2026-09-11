@@ -72,8 +72,10 @@ export default function ServiceOrderDetail() {
   const [technicianId, setTechnicianId] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const [orderEdit, setOrderEdit] = useState({ reportedIssue: '', priority: 'NORMAL', estimatedDeliveryAt: '', device: { category: 'CELULAR', brand: '', model: '', serialNumber: '', imei: '', color: '' } });
+  const [savingOrderEdit, setSavingOrderEdit] = useState(false);
 
-  const loadOrder = () => api.getServiceOrder(orderId).then((data) => { setOrder(data); setStatus(data.status); setTechnicianId(data.assignedTechnicianId || ''); setBudget({ partsCost: data.partsCost || '', laborCost: data.laborCost || '', otherCharges: data.otherCharges || '', finalCost: data.finalCost || '', budgetStatus: data.budgetStatus || 'PENDING' }); setDiagnosis({ diagnosis: data.diagnosis || '', probableCause: data.probableCause || '', testChecklist: data.testChecklist || {} }); }).catch(() => setMessage({ type: 'error', text: 'No se pudo cargar la orden.' })).finally(() => setLoading(false));
+  const loadOrder = () => api.getServiceOrder(orderId).then((data) => { setOrder(data); setStatus(data.status); setTechnicianId(data.assignedTechnicianId || ''); setBudget({ partsCost: data.partsCost || '', laborCost: data.laborCost || '', otherCharges: data.otherCharges || '', finalCost: data.finalCost || '', budgetStatus: data.budgetStatus || 'PENDING' }); setDiagnosis({ diagnosis: data.diagnosis || '', probableCause: data.probableCause || '', testChecklist: data.testChecklist || {} }); setOrderEdit({ reportedIssue: data.reportedIssue || '', priority: data.priority || 'NORMAL', estimatedDeliveryAt: data.estimatedDeliveryAt ? data.estimatedDeliveryAt.slice(0, 16) : '', device: { category: data.device.category, brand: data.device.brand || '', model: data.device.model || '', serialNumber: data.device.serialNumber || '', imei: data.device.imei || '', color: data.device.color || '' } }); }).catch(() => setMessage({ type: 'error', text: 'No se pudo cargar la orden.' })).finally(() => setLoading(false));
 
   useEffect(() => { loadOrder(); }, [orderId]);
   useEffect(() => { api.listInventory().then(setInventory).catch(() => {}); }, []);
@@ -110,6 +112,11 @@ export default function ServiceOrderDetail() {
   };
 
   const saveTechnician = () => api.assignTechnician(orderId, technicianId).then(() => { setMessage({ type: 'success', text: 'Técnico asignado correctamente.' }); return loadOrder(); }).catch(() => setMessage({ type: 'error', text: 'No se pudo asignar el técnico.' }));
+
+  const saveOrderEdit = () => {
+    setSavingOrderEdit(true);
+    api.updateServiceOrder(orderId, { reportedIssue: orderEdit.reportedIssue, priority: orderEdit.priority, estimatedDeliveryAt: orderEdit.estimatedDeliveryAt || undefined, device: orderEdit.device }).then(() => { setMessage({ type: 'success', text: 'Orden actualizada correctamente.' }); return loadOrder(); }).catch(() => setMessage({ type: 'error', text: 'No se pudo actualizar la orden.' })).finally(() => setSavingOrderEdit(false));
+  };
 
   const handleFileSelect = (event) => {
     const file = event.target.files?.[0];
@@ -148,12 +155,33 @@ export default function ServiceOrderDetail() {
         <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={3}>
             <MainCard title="Equipo y cliente">
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}><Stack direction="row" spacing={1.5}><DeviceHubRoundedIcon color="primary" /><Box><Typography variant="caption" color="text.secondary">Equipo</Typography><Typography variant="h4">{order.device.brand} {order.device.model}</Typography><Typography variant="body2" color="text.secondary">{order.device.category}</Typography></Box></Stack></Grid>
-                <Grid size={{ xs: 12, sm: 6 }}><Typography variant="caption" color="text.secondary">Cliente</Typography><Typography variant="h4">{order.customer.name}</Typography><Typography variant="body2" color="text.secondary">{order.customer.phone}</Typography></Grid>
-              </Grid>
-              <Divider sx={{ my: 2.5 }} />
-              <Typography variant="caption" color="text.secondary">Falla reportada</Typography><Typography sx={{ mt: 0.5 }}>{order.reportedIssue}</Typography>
+              <Stack spacing={2.5}>
+                <Stack direction="row" spacing={1.5}>
+                  <DeviceHubRoundedIcon color="primary" sx={{ mt: 0.5 }} />
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Cliente</Typography>
+                    <Typography variant="h4">{order.customer.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">{order.customer.phone}</Typography>
+                  </Box>
+                </Stack>
+                <Divider />
+                <Typography variant="subtitle1">Datos del equipo</Typography>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}><TextField select fullWidth label="Tipo de equipo" value={orderEdit.device.category} onChange={(event) => setOrderEdit({ ...orderEdit, device: { ...orderEdit.device, category: event.target.value } })}><MenuItem value="CELULAR">Celular</MenuItem><MenuItem value="TABLET">Tablet</MenuItem><MenuItem value="LAPTOP">Laptop</MenuItem><MenuItem value="CONSOLA">Consola</MenuItem><MenuItem value="OTRO">Otro</MenuItem></TextField></Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Color" value={orderEdit.device.color} onChange={(event) => setOrderEdit({ ...orderEdit, device: { ...orderEdit.device, color: event.target.value } })} /></Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Marca" value={orderEdit.device.brand} onChange={(event) => setOrderEdit({ ...orderEdit, device: { ...orderEdit.device, brand: event.target.value } })} /></Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Modelo" value={orderEdit.device.model} onChange={(event) => setOrderEdit({ ...orderEdit, device: { ...orderEdit.device, model: event.target.value } })} /></Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Número de serie" value={orderEdit.device.serialNumber} onChange={(event) => setOrderEdit({ ...orderEdit, device: { ...orderEdit.device, serialNumber: event.target.value } })} /></Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="IMEI" value={orderEdit.device.imei} onChange={(event) => setOrderEdit({ ...orderEdit, device: { ...orderEdit.device, imei: event.target.value } })} /></Grid>
+                </Grid>
+                <Typography variant="subtitle1">Falla y prioridad</Typography>
+                <TextField fullWidth multiline minRows={3} label="Falla reportada" value={orderEdit.reportedIssue} onChange={(event) => setOrderEdit({ ...orderEdit, reportedIssue: event.target.value })} />
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}><TextField select fullWidth label="Prioridad" value={orderEdit.priority} onChange={(event) => setOrderEdit({ ...orderEdit, priority: event.target.value })}><MenuItem value="NORMAL">Normal</MenuItem><MenuItem value="ALTA">Alta</MenuItem><MenuItem value="URGENTE">Urgente</MenuItem></TextField></Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth type="datetime-local" label="Entrega estimada" InputLabelProps={{ shrink: true }} value={orderEdit.estimatedDeliveryAt} onChange={(event) => setOrderEdit({ ...orderEdit, estimatedDeliveryAt: event.target.value })} /></Grid>
+                </Grid>
+                <Button variant="contained" startIcon={<SaveRoundedIcon />} onClick={saveOrderEdit} disabled={savingOrderEdit || !orderEdit.reportedIssue || !orderEdit.device.brand || !orderEdit.device.model} sx={{ alignSelf: 'flex-start' }}>{savingOrderEdit ? 'Guardando...' : 'Guardar cambios'}</Button>
+              </Stack>
             </MainCard>
             <MainCard title="Fotos y documentos">
               <Stack spacing={2}>

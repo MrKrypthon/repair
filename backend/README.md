@@ -50,6 +50,7 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `GET /api/service-orders`: lista órdenes con cliente, equipo e historial.
 - `POST /api/service-orders`: crea equipo, orden y primer evento de estado dentro de una transacción.
 - `GET /api/service-orders/:folio`: consulta el detalle de una orden.
+- `PATCH /api/service-orders/:folio`: edita falla reportada, prioridad, fecha estimada de entrega y datos del equipo.
 - `PATCH /api/service-orders/:folio/status`: cambia el estado y registra la transición.
 - `POST /api/auth/login`: autentica al usuario y devuelve un JWT.
 - `GET /api/auth/me`: devuelve el usuario autenticado.

@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
@@ -10,6 +10,7 @@ describe('Electrónica Tech API (e2e)', () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api');
+    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
     await app.init();
   });
 
@@ -57,6 +58,18 @@ describe('Electrónica Tech API (e2e)', () => {
 
     const detailWithoutAttachment = await request(app.getHttpServer()).get(`/api/service-orders/${order.body.folio}`).set('Authorization', `Bearer ${token}`).expect(200);
     expect(detailWithoutAttachment.body.attachments).toHaveLength(0);
+
+    const updated = await request(app.getHttpServer())
+      .patch(`/api/service-orders/${order.body.folio}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ reportedIssue: 'No enciende, pantalla en negro', priority: 'ALTA', device: { brand: 'Test Actualizado', model: 'E2E One Pro' } })
+      .expect(200);
+    expect(updated.body.reportedIssue).toBe('No enciende, pantalla en negro');
+    expect(updated.body.priority).toBe('ALTA');
+    expect(updated.body.device.brand).toBe('Test Actualizado');
+    expect(updated.body.device.model).toBe('E2E One Pro');
+
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order.body.folio}`).set('Authorization', `Bearer ${token}`).send({ reportedIssue: '' }).expect(400);
   });
 
   it('rejects attachments outside the allowed types', async () => {

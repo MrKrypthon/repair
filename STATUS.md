@@ -100,19 +100,12 @@ Construir una aplicación responsive para centralizar la operación de un taller
 
 ### En progreso
 
-- Reemplazar los datos temporales de clientes, órdenes y dashboard por datos provenientes de la API.
-- Añadir edición de órdenes y actualización de estados desde la interfaz.
-- Añadir autenticación y autorización antes de exponer la API fuera del entorno local.
 - Definir wireframes y navegación final de clientes, equipos y órdenes.
 - Definir estados, roles, permisos y reglas financieras definitivas.
 
 ### Pendiente
 
-- Implementar API NestJS y autenticación.
-- Crear migraciones y esquema PostgreSQL.
-- Implementar el flujo completo recepción -> diagnóstico -> autorización -> reparación -> cobro -> entrega.
-- Implementar inventario, agenda y documentación técnica.
-- Añadir pruebas unitarias, integración y end-to-end.
+- Ampliar la cobertura de pruebas unitarias e integración más allá de auth y el flujo principal.
 - Revisar y actualizar las dependencias con alertas de seguridad antes de producción.
 
 ## Decisiones tecnológicas
@@ -171,3 +164,10 @@ Inventario, agenda, notificaciones y base de conocimiento técnica quedan en fas
 - El detalle de orden ahora permite subir, previsualizar y eliminar fotos y documentos.
 - Se corrigió un bug existente en `detail.jsx`: se leía `order.payments` antes de comprobar que `order` no fuera `null`, lo que podía romper el render inicial.
 - Se probó el flujo completo (subida, URL pública, listado, borrado, rechazo de tipos no permitidos) contra la base de datos real.
+
+### 2026-09-11
+
+- Se creó el repositorio en GitHub (`MrKrypthon/repair`) con el commit inicial y se enlazó como `origin`.
+- Se corrigió el CI tras el primer push: `bitnami/minio:latest` ya no existe en Docker Hub; se reemplazó por un contenedor MinIO levantado manualmente (`docker run`) más creación de bucket con `minio/mc`, verificado localmente antes de subir el fix.
+- Se añadió edición de orden desde la interfaz (`PATCH /api/service-orders/:folio`): falla reportada, prioridad, fecha estimada de entrega y datos del equipo (categoría, marca, modelo, color, número de serie, IMEI).
+- Se detectó y corrigió un gap real en las pruebas e2e: el `ValidationPipe` global de `main.ts` nunca se aplicaba a la app de pruebas, por lo que la validación de DTOs no se ejercitaba de verdad.

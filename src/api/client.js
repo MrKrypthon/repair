@@ -32,6 +32,7 @@ export const api = {
   listServiceOrders: () => request('/service-orders'),
   createServiceOrder: (data) => request('/service-orders', { method: 'POST', body: JSON.stringify(data) }),
   getServiceOrder: (folio) => request(`/service-orders/${folio}`),
+  updateServiceOrder: (folio, data) => request(`/service-orders/${folio}`, { method: 'PATCH', body: JSON.stringify(data) }),
   updateServiceOrderStatus: (folio, data) => request(`/service-orders/${folio}/status`, { method: 'PATCH', body: JSON.stringify(data) }),
   createPayment: (folio, data) => request(`/service-orders/${folio}/payments`, { method: 'POST', body: JSON.stringify(data) }),
   updateServiceOrderBudget: (folio, data) => request(`/service-orders/${folio}/budget`, { method: 'PATCH', body: JSON.stringify(data) }),

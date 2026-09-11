@@ -48,6 +48,32 @@ export class ServiceOrdersService {
     return { ...order, attachments: order.attachments.map((attachment) => ({ ...attachment, url: this.storage.getUrl(attachment.key) })) };
   }
 
+  async update(
+    folio: string,
+    data: {
+      reportedIssue?: string;
+      priority?: Prisma.ServiceOrderCreateInput['priority'];
+      estimatedDeliveryAt?: string;
+      device?: { category?: DeviceCategory; brand?: string; model?: string; serialNumber?: string; imei?: string; color?: string };
+    }
+  ) {
+    const order = await this.prisma.serviceOrder.findUniqueOrThrow({ where: { folio } });
+    return this.prisma.$transaction(async (transaction) => {
+      if (data.device) {
+        await transaction.device.update({ where: { id: order.deviceId }, data: data.device });
+      }
+      return transaction.serviceOrder.update({
+        where: { folio },
+        data: {
+          reportedIssue: data.reportedIssue,
+          priority: data.priority,
+          estimatedDeliveryAt: data.estimatedDeliveryAt ? new Date(data.estimatedDeliveryAt) : undefined
+        },
+        include: { customer: true, device: true }
+      });
+    });
+  }
+
   async updateStatus(folio: string, data: { status: ServiceOrderStatus; note?: string }) {
     const order = await this.prisma.serviceOrder.findUniqueOrThrow({ where: { folio } });
 

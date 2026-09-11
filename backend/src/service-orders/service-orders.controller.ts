@@ -7,6 +7,7 @@ import { AddPartDto, CreateServiceOrderDto, UpdateBudgetDto } from './dto/create
 import { DeliverOrderDto, UpdateDiagnosisDto } from './dto/update-diagnosis.dto';
 import { CreateTechnicalNoteDto } from './dto/create-technical-note.dto';
 import { CreateAttachmentDto } from './dto/create-attachment.dto';
+import { UpdateServiceOrderDto } from './dto/update-service-order.dto';
 import { AssignTechnicianDto } from './dto/assign-technician.dto';
 import { ServiceOrdersService } from './service-orders.service';
 
@@ -33,6 +34,13 @@ export class ServiceOrdersController {
   @Get(':folio')
   findOne(@Param('folio') folio: string) {
     return this.serviceOrdersService.findOne(folio);
+  }
+
+  @Patch(':folio')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'RECEPTIONIST', 'TECHNICIAN')
+  update(@Param('folio') folio: string, @Body() body: UpdateServiceOrderDto) {
+    return this.serviceOrdersService.update(folio, body);
   }
 
   @Patch(':folio/status')
