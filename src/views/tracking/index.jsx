@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded';
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
-import FactCheckRoundedIcon from '@mui/icons-material/FactCheckRounded';
-import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
-import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -25,22 +20,9 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 import { api } from 'api/client';
+import { activeStepIndex, journeySteps } from 'utils/serviceOrderJourney';
 
 const labels = { RECIBIDO: 'Recibido', ESPERA_DIAGNOSTICO: 'En espera de diagnóstico', EN_DIAGNOSTICO: 'En diagnóstico', ESPERA_AUTORIZACION: 'Esperando autorización', ESPERA_PIEZA: 'Esperando pieza', EN_REPARACION: 'En reparación', EN_PRUEBAS: 'En pruebas', LISTO_ENTREGA: 'Listo para entrega', ENTREGADO: 'Entregado', CANCELADO: 'Cancelado', SIN_REPARACION: 'Sin reparación' };
-
-const journeySteps = [
-  { label: 'Recibido', icon: SearchRoundedIcon, statuses: ['RECIBIDO'] },
-  { label: 'Diagnóstico', icon: FactCheckRoundedIcon, statuses: ['ESPERA_DIAGNOSTICO', 'EN_DIAGNOSTICO'] },
-  { label: 'Autorización', icon: AssignmentTurnedInRoundedIcon, statuses: ['ESPERA_AUTORIZACION'] },
-  { label: 'Reparación', icon: BuildRoundedIcon, statuses: ['ESPERA_PIEZA', 'EN_REPARACION', 'EN_PRUEBAS'] },
-  { label: 'Listo para entrega', icon: Inventory2RoundedIcon, statuses: ['LISTO_ENTREGA'] },
-  { label: 'Entregado', icon: LocalShippingRoundedIcon, statuses: ['ENTREGADO'] }
-];
-
-const activeStepIndex = (status) => {
-  const index = journeySteps.findIndex((step) => step.statuses.includes(status));
-  return index === -1 ? 0 : index;
-};
 
 const REFRESH_INTERVAL_MS = 25000;
 

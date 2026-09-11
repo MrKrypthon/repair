@@ -22,12 +22,16 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import Stepper from '@mui/material/Stepper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
 import MainCard from 'ui-component/cards/MainCard';
 import { api } from 'api/client';
+import { activeStepIndex, journeySteps } from 'utils/serviceOrderJourney';
 
 const statuses = [
   ['RECIBIDO', 'Recibido'],
@@ -151,6 +155,22 @@ export default function ServiceOrderDetail() {
     <Stack spacing={3}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Button component={Link} to="/service-orders" startIcon={<ArrowBackRoundedIcon />}>Órdenes</Button><Typography color="text.secondary">/ {order.folio}</Typography></Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Orden {order.folio}</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Recibida el {new Date(order.receivedAt).toLocaleString('es-MX')}{order.estimatedDeliveryAt ? ` · Entrega estimada: ${new Date(order.estimatedDeliveryAt).toLocaleDateString('es-MX')}` : ''}</Typography></Box><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Chip label={statusLabel(order.status)} color="primary" />{order.status === 'LISTO_ENTREGA' && <Button variant="contained" color="success" startIcon={<LocalShippingRoundedIcon />} onClick={deliver} disabled={delivering}>{delivering ? 'Cerrando...' : 'Marcar entregado'}</Button>}</Stack></Stack>
+      {order.status !== 'CANCELADO' && order.status !== 'SIN_REPARACION' && (
+        <MainCard content={false}>
+          <Box sx={{ p: 2.5, overflowX: 'auto' }}>
+            <Stepper activeStep={activeStepIndex(order.status)} alternativeLabel sx={{ minWidth: 560 }}>
+              {journeySteps.map((step, index) => {
+                const Icon = step.icon;
+                return (
+                  <Step key={step.label}>
+                    <StepLabel StepIconComponent={() => <Icon color={index <= activeStepIndex(order.status) ? 'primary' : 'disabled'} />}>{step.label}</StepLabel>
+                  </Step>
+                );
+              })}
+            </Stepper>
+          </Box>
+        </MainCard>
+      )}
       {message.text && <Alert severity={message.type}>{message.text}</Alert>}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
