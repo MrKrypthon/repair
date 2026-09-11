@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: electronica-tech-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: electronica_tech
+      POSTGRES_USER: electronica
+      POSTGRES_PASSWORD: electronica_dev
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: electronica-tech-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: electronica
+      MINIO_ROOT_PASSWORD: electronica_dev_minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: electronica-tech-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 electronica electronica_dev_minio &&
+      mc mb -p local/electronica-tech-attachments &&
+      mc anonymous set download local/electronica-tech-attachments
+      "
+
+volumes:
+  postgres_data:
+  minio_data:

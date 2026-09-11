@@ -1,0 +1,8 @@
+-- CreateEnum
+CREATE TYPE "BudgetStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+
+-- AlterTable
+ALTER TABLE "ServiceOrder" ADD COLUMN     "budgetStatus" "BudgetStatus" NOT NULL DEFAULT 'PENDING',
+ADD COLUMN     "laborCost" DECIMAL(12,2) NOT NULL DEFAULT 0,
+ADD COLUMN     "otherCharges" DECIMAL(12,2) NOT NULL DEFAULT 0,
+ADD COLUMN     "partsCost" DECIMAL(12,2) NOT NULL DEFAULT 0;
