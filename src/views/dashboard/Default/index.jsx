@@ -84,7 +84,7 @@ function WorkshopCharts({ dashboard }) {
 }
 
 export default function Dashboard() {
-  const isTechnician = JSON.parse(localStorage.getItem('electronica-tech-user') || '{}').role === 'TECHNICIAN';
+  const isTechnician = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role === 'TECHNICIAN';
   const [dashboard, setDashboard] = useState(null);
   const [recentOrders, setRecentOrders] = useState(orders);
   const [error, setError] = useState('');

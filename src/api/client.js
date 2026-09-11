@@ -5,15 +5,15 @@ async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...(localStorage.getItem('electronica-tech-token') ? { Authorization: `Bearer ${localStorage.getItem('electronica-tech-token')}` } : {}),
+      ...(localStorage.getItem('fixtrack-token') ? { Authorization: `Bearer ${localStorage.getItem('fixtrack-token')}` } : {}),
       ...options.headers
     },
     ...options
   });
 
   if (response.status === 401 && path !== '/auth/login') {
-    localStorage.removeItem('electronica-tech-token');
-    localStorage.removeItem('electronica-tech-user');
+    localStorage.removeItem('fixtrack-token');
+    localStorage.removeItem('fixtrack-user');
     if (!window.location.pathname.startsWith('/pages/login')) {
       window.location.href = '/pages/login';
     }

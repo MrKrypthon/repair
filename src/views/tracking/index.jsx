@@ -58,7 +58,7 @@ export default function Tracking() {
       <CardContent sx={{ p: { xs: 3, md: 5 } }}>
         <Stack spacing={3.5}>
           <Box>
-            <Typography color="primary" fontWeight={700} sx={{ letterSpacing: 1 }}>ELECTRÓNICA TECH</Typography>
+            <Typography color="primary" fontWeight={700} sx={{ letterSpacing: 1 }}>FIXTRACK</Typography>
             <Typography variant="h2" sx={{ mt: 1 }}>Seguimiento de reparación</Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5 }}>Orden {order.folio} · {order.device.brand} {order.device.model}</Typography>
           </Box>

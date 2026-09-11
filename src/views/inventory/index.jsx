@@ -92,7 +92,7 @@ function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemov
 }
 
 export default function Inventory() {
-  const isTechnician = JSON.parse(localStorage.getItem('electronica-tech-user') || '{}').role === 'TECHNICIAN';
+  const isTechnician = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role === 'TECHNICIAN';
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');

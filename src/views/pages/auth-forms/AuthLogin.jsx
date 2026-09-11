@@ -33,8 +33,8 @@ export default function AuthLogin() {
     setLoading(true);
     setError('');
     api.login({ email, password }).then((result) => {
-      localStorage.setItem('electronica-tech-token', result.accessToken);
-      localStorage.setItem('electronica-tech-user', JSON.stringify(result.user));
+      localStorage.setItem('fixtrack-token', result.accessToken);
+      localStorage.setItem('fixtrack-user', JSON.stringify(result.user));
       navigate(result.user.role === 'TECHNICIAN' ? '/service-orders' : '/dashboard');
     }).catch(() => setError('Correo o contraseña incorrectos.')).finally(() => setLoading(false));
   };

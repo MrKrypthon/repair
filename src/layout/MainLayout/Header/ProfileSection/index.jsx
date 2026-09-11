@@ -22,7 +22,6 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
 // project imports
-import UpgradePlanCard from './UpgradePlanCard';
 import MainCard from 'ui-component/cards/MainCard';
 import Transitions from 'ui-component/extended/Transitions';
 import useConfig from 'hooks/useConfig';
@@ -45,12 +44,12 @@ export default function ProfileSection() {
   const [value, setValue] = useState('');
   const [notification, setNotification] = useState(false);
   const [open, setOpen] = useState(false);
-  const user = JSON.parse(localStorage.getItem('electronica-tech-user') || '{"name":"Usuario","role":"TECHNICIAN"}');
+  const user = JSON.parse(localStorage.getItem('fixtrack-user') || '{"name":"Usuario","role":"TECHNICIAN"}');
   const roleLabels = { ADMIN: 'Administrador', TECHNICIAN: 'Técnico', RECEPTIONIST: 'Recepción' };
 
   const logout = () => {
-    localStorage.removeItem('electronica-tech-token');
-    localStorage.removeItem('electronica-tech-user');
+    localStorage.removeItem('fixtrack-token');
+    localStorage.removeItem('fixtrack-user');
     navigate('/pages/login');
   };
 
@@ -162,8 +161,6 @@ export default function ProfileSection() {
                         '&::-webkit-scrollbar': { width: 5 }
                       }}
                     >
-                      <UpgradePlanCard />
-                      <Divider />
                       <Card sx={{ bgcolor: 'primary.light', my: 2 }}>
                         <CardContent>
                           <Stack sx={{ gap: 3 }}>

@@ -20,7 +20,7 @@ function MenuList() {
 
   const [selectedID, setSelectedID] = useState('');
 
-  const currentRole = JSON.parse(localStorage.getItem('electronica-tech-user') || '{}').role;
+  const currentRole = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role;
   const visibleItems = menuItems.items.filter((item) => !(item.id === 'dashboard' && currentRole === 'TECHNICIAN'));
 
   const lastItem = null;

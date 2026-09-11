@@ -12,7 +12,7 @@ export const ConfigContext = createContext(undefined);
 // ==============================|| CONFIG PROVIDER ||============================== //
 
 export function ConfigProvider({ children }) {
-  const { state, setState, setField, resetState } = useLocalStorage('berry-config-vite-js', config);
+  const { state, setState, setField, resetState } = useLocalStorage('fixtrack-config', config);
 
   const memoizedValue = useMemo(() => ({ state, setState, setField, resetState }), [state, setField, setState, resetState]);
 

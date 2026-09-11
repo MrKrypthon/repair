@@ -53,7 +53,7 @@ const statusLabel = (value) => statuses.find(([key]) => key === value)?.[1] || v
 
 export default function ServiceOrderDetail() {
   const { orderId } = useParams();
-  const isTechnician = JSON.parse(localStorage.getItem('electronica-tech-user') || '{}').role === 'TECHNICIAN';
+  const isTechnician = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role === 'TECHNICIAN';
   const [order, setOrder] = useState(null);
   const [status, setStatus] = useState('');
   const [note, setNote] = useState('');

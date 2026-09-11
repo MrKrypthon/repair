@@ -1,11 +1,11 @@
-# Electrónica Tech
+# FixTrack
 
 Aplicación web para gestionar talleres de electrónica y reparación de celulares.
 
 ## Stack inicial
 
 - Frontend: React 19 + Vite + JavaScript.
-- UI: Material UI y componentes del template Berry Vite.
+- UI: Material UI.
 - Backend previsto: Node.js + NestJS, organizado como monolito modular.
 - Base de datos: PostgreSQL.
 - Archivos: almacenamiento compatible con S3; MinIO en desarrollo.
