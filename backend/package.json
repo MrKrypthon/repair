@@ -2,6 +2,10 @@
   "name": "electronica-tech-api",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "multer": "2.3.0",
+    "deepmerge-ts": "8.0.2"
+  },
   "scripts": {
     "build": "nest build",
     "start:dev": "nest start --watch",

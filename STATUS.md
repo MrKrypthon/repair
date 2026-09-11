@@ -106,7 +106,6 @@ Construir una aplicación responsive para centralizar la operación de un taller
 ### Pendiente
 
 - Ampliar la cobertura de pruebas unitarias e integración más allá de auth y el flujo principal.
-- Revisar y actualizar las dependencias con alertas de seguridad antes de producción.
 
 ## Decisiones tecnológicas
 
@@ -191,3 +190,4 @@ El técnico, al iniciar sesión, va directo a "Órdenes de servicio" en lugar de
 - Se detectó y corrigió un gap real en las pruebas e2e: el `ValidationPipe` global de `main.ts` nunca se aplicaba a la app de pruebas, por lo que la validación de DTOs no se ejercitaba de verdad.
 - Se definieron y aplicaron los roles y permisos: solo Admin/Recepción pueden autorizar o rechazar presupuestos, ver el dashboard financiero y hacer ajustes manuales de inventario; Técnico conserva la carga de costos, el cambio de estado y el consumo de piezas dentro de una orden. Ver tabla completa en la sección "Roles y permisos".
 - Se ocultó el Dashboard del menú y la redirección de login para el rol Técnico, que ahora entra directo a Órdenes de servicio.
+- Se resolvieron las 16 vulnerabilidades altas marcadas por `npm audit` (7 backend, 9 frontend). Backend: se fijaron `multer` y `deepmerge-ts` a versiones no vulnerables vía `overrides` (evitando el downgrade a NestJS 7 y Prisma 6.12 que sugería `--force`). Frontend: se actualizaron `lodash-es`, `react-router`, `react-router-dom` y `vite`, y se eliminó `prettier-eslint-cli` (dependencia de desarrollo sin uso real que arrastraba un `minimatch` vulnerable). `npm audit` queda en 0 vulnerabilidades en ambos proyectos.
