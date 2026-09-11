@@ -23,15 +23,6 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
-      minio:
-        image: bitnami/minio:latest
-        env:
-          MINIO_ROOT_USER: electronica
-          MINIO_ROOT_PASSWORD: electronica_ci_minio
-          MINIO_DEFAULT_BUCKETS: electronica-tech-attachments
-        ports:
-          - 9000:9000
-
     env:
       DATABASE_URL: postgresql://electronica:electronica_ci@localhost:5432/electronica_tech?schema=public
       JWT_SECRET: ci-secret
@@ -45,6 +36,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=electronica \
+            -e MINIO_ROOT_PASSWORD=electronica_ci_minio \
+            minio/minio server /data
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -70,6 +69,13 @@ jobs:
           done
           echo "MinIO did not become ready in time" >&2
           exit 1
+
+      - name: Create MinIO bucket
+        run: |
+          docker run --rm --network host --entrypoint sh minio/mc:latest -c "
+            mc alias set local http://localhost:9000 electronica electronica_ci_minio &&
+            mc mb -p local/electronica-tech-attachments
+          "
 
       - name: Prepare database
         working-directory: backend
