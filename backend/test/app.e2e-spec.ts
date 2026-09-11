@@ -149,4 +149,25 @@ describe('Electrónica Tech API (e2e)', () => {
     const withoutImage = await request(app.getHttpServer()).delete(`/api/inventory/${item.body.id}/image`).set('Authorization', `Bearer ${token}`).expect(200);
     expect(withoutImage.body.imageUrl).toBeNull();
   });
+
+  it('exposes photos (but not documents) on the public tracking page', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${token}`).send({ name: 'E2E Cliente Tracking', phone: `558${suffix}`, email: `e2e-track-${suffix}@test.local` }).expect(201);
+    const order = await request(app.getHttpServer()).post('/api/service-orders').set('Authorization', `Bearer ${token}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'Test', model: 'E2E Tracking', reportedIssue: 'No enciende', priority: 'NORMAL' }).expect(201);
+
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+    await request(app.getHttpServer())
+      .post(`/api/service-orders/${order.body.folio}/attachments`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('file', png, { filename: 'foto.png', contentType: 'image/png' })
+      .expect(201);
+
+    const publicView = await request(app.getHttpServer()).get(`/api/public/tracking/${order.body.publicTrackingToken}`).expect(200);
+    expect(publicView.body.attachments).toHaveLength(1);
+    expect(publicView.body.attachments[0].url).toEqual(expect.any(String));
+    expect(publicView.body.statusHistory).toHaveLength(1);
+  });
 });

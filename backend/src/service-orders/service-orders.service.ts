@@ -156,8 +156,8 @@ export class ServiceOrdersService {
     });
   }
 
-  publicTracking(token: string) {
-    return this.prisma.serviceOrder.findUniqueOrThrow({
+  async publicTracking(token: string) {
+    const order = await this.prisma.serviceOrder.findUniqueOrThrow({
       where: { publicTrackingToken: token },
       select: {
         folio: true,
@@ -168,9 +168,11 @@ export class ServiceOrdersService {
         estimatedCost: true,
         budgetStatus: true,
         device: { select: { category: true, brand: true, model: true } },
-        statusHistory: { select: { newStatus: true, note: true, createdAt: true }, orderBy: { createdAt: 'asc' } }
+        statusHistory: { select: { newStatus: true, note: true, createdAt: true }, orderBy: { createdAt: 'asc' } },
+        attachments: { where: { category: 'PHOTO' }, select: { id: true, fileName: true, key: true, createdAt: true }, orderBy: { createdAt: 'desc' } }
       }
     });
+    return { ...order, attachments: order.attachments.map((photo) => ({ id: photo.id, fileName: photo.fileName, createdAt: photo.createdAt, url: this.storage.getUrl(photo.key) })) };
   }
 
   publicBudget(token: string, budgetStatus: BudgetStatus) {
