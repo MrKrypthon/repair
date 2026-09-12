@@ -10,6 +10,7 @@ import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRound
 import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
+import PictureAsPdfRoundedIcon from '@mui/icons-material/PictureAsPdfRounded';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -32,6 +33,7 @@ import Typography from '@mui/material/Typography';
 import MainCard from 'ui-component/cards/MainCard';
 import { api } from 'api/client';
 import { activeStepIndex, journeySteps } from 'utils/serviceOrderJourney';
+import { generateOrderPdf } from 'utils/generateOrderPdf';
 
 const statuses = [
   ['RECIBIDO', 'Recibido'],
@@ -154,7 +156,7 @@ export default function ServiceOrderDetail() {
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Button component={Link} to="/service-orders" startIcon={<ArrowBackRoundedIcon />}>Órdenes</Button><Typography color="text.secondary">/ {order.folio}</Typography></Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Orden {order.folio}</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Recibida el {new Date(order.receivedAt).toLocaleString('es-MX')}{order.estimatedDeliveryAt ? ` · Entrega estimada: ${new Date(order.estimatedDeliveryAt).toLocaleDateString('es-MX')}` : ''}</Typography></Box><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Chip label={statusLabel(order.status)} color="primary" />{order.status === 'LISTO_ENTREGA' && <Button variant="contained" color="success" startIcon={<LocalShippingRoundedIcon />} onClick={deliver} disabled={delivering}>{delivering ? 'Cerrando...' : 'Marcar entregado'}</Button>}</Stack></Stack>
+      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Orden {order.folio}</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Recibida el {new Date(order.receivedAt).toLocaleString('es-MX')}{order.estimatedDeliveryAt ? ` · Entrega estimada: ${new Date(order.estimatedDeliveryAt).toLocaleDateString('es-MX')}` : ''}</Typography></Box><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Chip label={statusLabel(order.status)} color="primary" /><Button variant="outlined" startIcon={<PictureAsPdfRoundedIcon />} onClick={() => generateOrderPdf(order)}>Descargar PDF</Button>{order.status === 'LISTO_ENTREGA' && <Button variant="contained" color="success" startIcon={<LocalShippingRoundedIcon />} onClick={deliver} disabled={delivering}>{delivering ? 'Cerrando...' : 'Marcar entregado'}</Button>}</Stack></Stack>
       {order.status !== 'CANCELADO' && order.status !== 'SIN_REPARACION' && (
         <MainCard content={false}>
           <Box sx={{ p: 2.5, overflowX: 'auto' }}>
