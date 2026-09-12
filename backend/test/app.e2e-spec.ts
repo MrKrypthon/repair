@@ -205,4 +205,25 @@ describe('Electrónica Tech API (e2e)', () => {
     expect(after.body.movements.some((movement: { type: string; description: string }) => movement.type === 'INCOME' && movement.description.includes(order.body.folio))).toBe(true);
     expect(after.body.movements.some((movement: { type: string; description: string }) => movement.type === 'EXPENSE' && movement.description.includes(purchaseOrder.body.folio))).toBe(true);
   });
+
+  it('creates appointments and updates their status', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${token}`).send({ name: 'E2E Cliente Agenda', phone: `560${suffix}`, email: `e2e-agenda-${suffix}@test.local` }).expect(201);
+    const appointment = await request(app.getHttpServer())
+      .post('/api/appointments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Entrega equipo E2E', type: 'DELIVERY', startsAt: new Date().toISOString(), endsAt: new Date(Date.now() + 30 * 60000).toISOString(), customerId: customer.body.id })
+      .expect(201);
+    expect(appointment.body.status).toBe('SCHEDULED');
+
+    const list = await request(app.getHttpServer()).get('/api/appointments').set('Authorization', `Bearer ${token}`).expect(200);
+    const found = list.body.find((item: { id: string }) => item.id === appointment.body.id);
+    expect(found.customer.name).toBe('E2E Cliente Agenda');
+
+    const completed = await request(app.getHttpServer()).patch(`/api/appointments/${appointment.body.id}/status`).set('Authorization', `Bearer ${token}`).send({ status: 'COMPLETED' }).expect(200);
+    expect(completed.body.status).toBe('COMPLETED');
+  });
 });

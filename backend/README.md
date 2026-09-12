@@ -83,6 +83,7 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `PATCH /api/service-orders/:folio/diagnosis`: guarda diagnóstico, causa probable y checklist técnico.
 - `GET /api/appointments`: consulta la agenda ordenada por fecha.
 - `POST /api/appointments`: crea una cita o evento de agenda.
+- `PATCH /api/appointments/:id/status`: marca un evento como completado o cancelado.
 - `GET /api/technical-knowledge?q=...`: busca documentación técnica.
 - `POST /api/technical-knowledge`: crea una solución o documento técnico.
 - `GET /api/analytics/dashboard`: devuelve métricas operativas del taller.

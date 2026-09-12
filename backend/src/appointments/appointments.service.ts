@@ -13,4 +13,8 @@ export class AppointmentsService {
   create(data: CreateAppointment) {
     return this.prisma.appointment.create({ data: { ...data, startsAt: new Date(data.startsAt), endsAt: new Date(data.endsAt), status: AppointmentStatus.SCHEDULED } });
   }
+
+  updateStatus(id: string, status: AppointmentStatus) {
+    return this.prisma.appointment.update({ where: { id }, data: { status } });
+  }
 }

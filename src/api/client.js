@@ -80,6 +80,7 @@ export const api = {
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
   listAppointments: () => request('/appointments'),
   createAppointment: (data) => request('/appointments', { method: 'POST', body: JSON.stringify(data) }),
+  updateAppointmentStatus: (id, status) => request(`/appointments/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   listTechnicalKnowledge: (query = '') => request(`/technical-knowledge${query ? `?q=${encodeURIComponent(query)}` : ''}`),
   createTechnicalDocument: (data) => request('/technical-knowledge', { method: 'POST', body: JSON.stringify(data) }),
   getDashboardMetrics: () => request('/analytics/dashboard'),
