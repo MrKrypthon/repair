@@ -108,8 +108,14 @@ export class ServiceOrdersService {
       const item = await transaction.inventoryItem.findUniqueOrThrow({ where: { id: data.inventoryItemId } });
       if (item.stock < data.quantity) throw new BadRequestException('Stock insuficiente para esta pieza');
       const part = await transaction.orderPart.create({ data: { serviceOrderId: order.id, inventoryItemId: item.id, quantity: data.quantity, unitCost: item.cost, unitPrice: item.salePrice }, include: { inventoryItem: true } });
-      await transaction.inventoryItem.update({ where: { id: item.id }, data: { stock: { decrement: data.quantity } } });
+      const nextStock = item.stock - data.quantity;
+      await transaction.inventoryItem.update({ where: { id: item.id }, data: { stock: nextStock } });
       await transaction.inventoryMovement.create({ data: { inventoryItemId: item.id, type: 'OUT', quantity: data.quantity, note: `Consumo en orden ${folio}` } });
+      if (item.stock > item.minimumStock && nextStock <= item.minimumStock) {
+        await transaction.notification.create({
+          data: { title: 'Stock bajo', message: `"${item.name}" (SKU ${item.sku}) llegó a ${nextStock} unidades, por debajo del mínimo (${item.minimumStock}).`, type: 'WARNING' }
+        });
+      }
       return part;
     });
   }

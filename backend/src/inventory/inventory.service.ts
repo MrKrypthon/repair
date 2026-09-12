@@ -35,7 +35,13 @@ export class InventoryService {
     if (nextStock < 0) throw new BadRequestException('Stock insuficiente');
     return this.prisma.$transaction(async (transaction) => {
       await transaction.inventoryMovement.create({ data: { inventoryItemId: id, type: data.type, quantity: data.quantity, note: data.note } });
-      return transaction.inventoryItem.update({ where: { id }, data: { stock: nextStock } });
+      const updated = await transaction.inventoryItem.update({ where: { id }, data: { stock: nextStock } });
+      if (item.stock > item.minimumStock && nextStock <= item.minimumStock) {
+        await transaction.notification.create({
+          data: { title: 'Stock bajo', message: `"${item.name}" (SKU ${item.sku}) llegó a ${nextStock} unidades, por debajo del mínimo (${item.minimumStock}).`, type: 'WARNING' }
+        });
+      }
+      return updated;
     });
   }
 

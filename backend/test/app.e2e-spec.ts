@@ -226,4 +226,34 @@ describe('Electrónica Tech API (e2e)', () => {
     const completed = await request(app.getHttpServer()).patch(`/api/appointments/${appointment.body.id}/status`).set('Authorization', `Bearer ${token}`).send({ status: 'COMPLETED' }).expect(200);
     expect(completed.body.status).toBe('COMPLETED');
   });
+
+  it('alerts once when stock crosses the minimum threshold, via manual adjustment or order consumption', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+
+    const item = await request(app.getHttpServer()).post('/api/inventory').set('Authorization', `Bearer ${token}`).send({ name: `Pieza Stock Bajo ${suffix}`, sku: `LOW-${suffix}`, category: 'Test', cost: 10, salePrice: 25, stock: 5, minimumStock: 3 }).expect(201);
+
+    await request(app.getHttpServer()).patch(`/api/inventory/${item.body.id}/stock`).set('Authorization', `Bearer ${token}`).send({ type: 'OUT', quantity: 1 }).expect(200);
+    let notifications = await request(app.getHttpServer()).get('/api/notifications').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(notifications.body.some((n: { message: string }) => n.message.includes(`LOW-${suffix}`))).toBe(false);
+
+    await request(app.getHttpServer()).patch(`/api/inventory/${item.body.id}/stock`).set('Authorization', `Bearer ${token}`).send({ type: 'OUT', quantity: 1 }).expect(200);
+    notifications = await request(app.getHttpServer()).get('/api/notifications').set('Authorization', `Bearer ${token}`).expect(200);
+    const lowStockAlerts = notifications.body.filter((n: { message: string; type: string }) => n.message.includes(`LOW-${suffix}`));
+    expect(lowStockAlerts).toHaveLength(1);
+    expect(lowStockAlerts[0].type).toBe('WARNING');
+
+    await request(app.getHttpServer()).patch(`/api/inventory/${item.body.id}/stock`).set('Authorization', `Bearer ${token}`).send({ type: 'OUT', quantity: 1 }).expect(200);
+    notifications = await request(app.getHttpServer()).get('/api/notifications').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(notifications.body.filter((n: { message: string }) => n.message.includes(`LOW-${suffix}`))).toHaveLength(1);
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${token}`).send({ name: 'E2E Cliente Stock', phone: `561${suffix}`, email: `e2e-stock-${suffix}@test.local` }).expect(201);
+    const order = await request(app.getHttpServer()).post('/api/service-orders').set('Authorization', `Bearer ${token}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'Test', model: 'E2E Stock', reportedIssue: 'No enciende', priority: 'NORMAL' }).expect(201);
+
+    const item2 = await request(app.getHttpServer()).post('/api/inventory').set('Authorization', `Bearer ${token}`).send({ name: `Pieza Stock Bajo Orden ${suffix}`, sku: `LOW2-${suffix}`, category: 'Test', cost: 10, salePrice: 25, stock: 3, minimumStock: 2 }).expect(201);
+    await request(app.getHttpServer()).post(`/api/service-orders/${order.body.folio}/parts`).set('Authorization', `Bearer ${token}`).send({ inventoryItemId: item2.body.id, quantity: 1 }).expect(201);
+    notifications = await request(app.getHttpServer()).get('/api/notifications').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(notifications.body.some((n: { message: string }) => n.message.includes(`LOW2-${suffix}`))).toBe(true);
+  });
 });
