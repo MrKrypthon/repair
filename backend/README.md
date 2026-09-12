@@ -15,6 +15,14 @@ npm run start:dev
 
 Usuario inicial de desarrollo: `admin@electronicatech.local` / `Admin123!`. Debe cambiarse antes de un despliegue real.
 
+Para poblar la base con datos demo cercanos a la realidad (clientes, equipos, órdenes en distintos estados, inventario, proveedores, órdenes de compra recibidas y pagos, con finanzas netas en positivo):
+
+```bash
+DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronica_tech?schema=public" npm run prisma:demo-seed
+```
+
+`prisma:demo-seed` **agrega** datos, no es idempotente: pensado para correrse una sola vez sobre una base de desarrollo vacía o casi vacía. Usuarios técnico/recepción demo: `ana.garcia@electronicatech.local`, `luis.martinez@electronicatech.local`, `sofia.hernandez@electronicatech.local` (contraseña `Demo123!`).
+
 Permisos: `ADMIN` puede operar todo. `RECEPTIONIST` puede crear/editar clientes y órdenes, registrar pagos y autorizar presupuestos. `TECHNICIAN` puede editar datos de la orden, cambiar estados, diagnosticar, adjuntar fotos/documentos, cargar el desglose de costos y consumir piezas dentro de una orden — pero no puede autorizar/rechazar presupuestos, hacer ajustes manuales de stock ni ver el dashboard financiero. Detalle completo en `STATUS.md`.
 
 La API queda disponible en `http://localhost:3001/api`.
@@ -32,6 +40,8 @@ Pruebas HTTP contra PostgreSQL local:
 ```bash
 DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronica_tech?schema=public" npm run test:e2e
 ```
+
+**Atención:** las pruebas e2e escriben datos reales (clientes, órdenes, pagos con sufijos `E2E ...`) en la base indicada por `DATABASE_URL`. Correrlas contra tu base de desarrollo la deja con esos registros de prueba mezclados con los reales/demo — no se limpian solas. Usa una base separada para pruebas si quieres mantener tu base de desarrollo limpia (en CI ya corren contra un Postgres efímero propio).
 
 La prueba e2e cubre el flujo cliente -> orden -> pieza -> pago.
 
