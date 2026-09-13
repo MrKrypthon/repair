@@ -89,6 +89,7 @@ export default function ServiceOrderDetail() {
   const fileInputRef = useRef(null);
   const [orderEdit, setOrderEdit] = useState({ reportedIssue: '', priority: 'NORMAL', estimatedDeliveryAt: '', device: { category: 'CELULAR', brand: '', model: '', serialNumber: '', imei: '', color: '' } });
   const [savingOrderEdit, setSavingOrderEdit] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [deliverDialogOpen, setDeliverDialogOpen] = useState(false);
   const [deliverForm, setDeliverForm] = useState({ warrantyDays: '30', note: '' });
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
@@ -150,6 +151,11 @@ export default function ServiceOrderDetail() {
     api.deleteOrderAttachment(orderId, attachmentId).then(() => { setMessage({ type: 'success', text: 'Archivo eliminado.' }); return loadOrder(); }).catch(() => setMessage({ type: 'error', text: 'No se pudo eliminar el archivo.' }));
   };
 
+  const downloadPdf = () => {
+    setGeneratingPdf(true);
+    generateOrderPdf(order).catch(() => setMessage({ type: 'error', text: 'No se pudo generar el PDF.' })).finally(() => setGeneratingPdf(false));
+  };
+
   const deliver = () => {
     setDelivering(true);
     api.deliverServiceOrder(orderId, { note: deliverForm.note || undefined, warrantyDays: deliverForm.warrantyDays === '' ? undefined : Number(deliverForm.warrantyDays) })
@@ -181,7 +187,7 @@ export default function ServiceOrderDetail() {
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Button component={Link} to="/service-orders" startIcon={<ArrowBackRoundedIcon />}>Órdenes</Button><Typography color="text.secondary">/ {order.folio}</Typography></Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Orden {order.folio}</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Recibida el {new Date(order.receivedAt).toLocaleString('es-MX')}{order.estimatedDeliveryAt ? ` · Entrega estimada: ${new Date(order.estimatedDeliveryAt).toLocaleDateString('es-MX')}` : ''}</Typography></Box><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Chip label={statusLabel(order.status)} color="primary" /><Button variant="outlined" startIcon={<PictureAsPdfRoundedIcon />} onClick={() => generateOrderPdf(order)}>Descargar PDF</Button>{order.status === 'LISTO_ENTREGA' && <Button variant="contained" color="success" startIcon={<LocalShippingRoundedIcon />} onClick={() => setDeliverDialogOpen(true)}>Marcar entregado</Button>}</Stack></Stack>
+      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Orden {order.folio}</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Recibida el {new Date(order.receivedAt).toLocaleString('es-MX')}{order.estimatedDeliveryAt ? ` · Entrega estimada: ${new Date(order.estimatedDeliveryAt).toLocaleDateString('es-MX')}` : ''}</Typography></Box><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Chip label={statusLabel(order.status)} color="primary" /><Button variant="outlined" startIcon={<PictureAsPdfRoundedIcon />} onClick={downloadPdf} disabled={generatingPdf}>{generatingPdf ? 'Generando...' : 'Descargar PDF'}</Button>{order.status === 'LISTO_ENTREGA' && <Button variant="contained" color="success" startIcon={<LocalShippingRoundedIcon />} onClick={() => setDeliverDialogOpen(true)}>Marcar entregado</Button>}</Stack></Stack>
       {order.status !== 'CANCELADO' && order.status !== 'SIN_REPARACION' && (
         <MainCard content={false}>
           <Box sx={{ p: 2.5, overflowX: 'auto' }}>
