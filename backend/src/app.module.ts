@@ -15,8 +15,9 @@ import { SuppliersModule } from './suppliers/suppliers.module';
 import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { FinanceModule } from './finance/finance.module';
 import { SearchModule } from './search/search.module';
+import { QuotationsModule } from './quotations/quotations.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuthModule, CustomersModule, ServiceOrdersModule, PaymentsModule, InventoryModule, AppointmentsModule, TechnicalKnowledgeModule, AnalyticsModule, NotificationsModule, UsersModule, SuppliersModule, PurchaseOrdersModule, FinanceModule, SearchModule]
+  imports: [PrismaModule, StorageModule, AuthModule, CustomersModule, ServiceOrdersModule, PaymentsModule, InventoryModule, AppointmentsModule, TechnicalKnowledgeModule, AnalyticsModule, NotificationsModule, UsersModule, SuppliersModule, PurchaseOrdersModule, FinanceModule, SearchModule, QuotationsModule]
 })
 export class AppModule {}

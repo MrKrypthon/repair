@@ -95,6 +95,12 @@ export const api = {
     const query = params.toString();
     return request(`/analytics/technicians${query ? `?${query}` : ''}`);
   },
+  listQuotations: (status) => request(`/quotations${status ? `?status=${status}` : ''}`),
+  getQuotation: (folio) => request(`/quotations/${folio}`),
+  createQuotation: (data) => request('/quotations', { method: 'POST', body: JSON.stringify(data) }),
+  updateQuotation: (folio, data) => request(`/quotations/${folio}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  updateQuotationStatus: (folio, status) => request(`/quotations/${folio}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  convertQuotation: (folio) => request(`/quotations/${folio}/convert`, { method: 'POST' }),
   getFinanceSummary: (from, to) => {
     const params = new URLSearchParams();
     if (from) params.set('from', from);

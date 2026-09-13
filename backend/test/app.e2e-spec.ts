@@ -390,4 +390,52 @@ describe('Electrónica Tech API (e2e)', () => {
     expect(fromPurchaseOrder.newCost).toBe('22');
     expect(fromPurchaseOrder.reference).toBe(purchaseOrder.body.folio);
   });
+
+  it('creates quotations and converts approved ones into service orders', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${token}`).send({ name: 'E2E Cliente Cotización', phone: `566${suffix}`, email: `e2e-cot-${suffix}@test.local` }).expect(201);
+
+    const quotation = await request(app.getHttpServer())
+      .post('/api/quotations')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ customerId: customer.body.id, category: 'CELULAR', brand: 'E2E', model: 'Modelo Cotización', issueDescription: 'No enciende', items: [{ description: 'Pantalla', quantity: 1, unitPrice: 500 }, { description: 'Mano de obra', quantity: 1, unitPrice: 150 }] })
+      .expect(201);
+    expect(quotation.body.status).toBe('DRAFT');
+    expect(quotation.body.folio).toMatch(/^COT-/);
+
+    // editar mientras está en borrador sí se permite
+    const edited = await request(app.getHttpServer()).patch(`/api/quotations/${quotation.body.folio}`).set('Authorization', `Bearer ${token}`).send({ notes: 'Precio sujeto a disponibilidad' }).expect(200);
+    expect(edited.body.notes).toBe('Precio sujeto a disponibilidad');
+
+    await request(app.getHttpServer()).patch(`/api/quotations/${quotation.body.folio}/status`).set('Authorization', `Bearer ${token}`).send({ status: 'SENT' }).expect(200);
+
+    // ya no se puede editar una vez enviada
+    await request(app.getHttpServer()).patch(`/api/quotations/${quotation.body.folio}`).set('Authorization', `Bearer ${token}`).send({ notes: 'no debería aplicar' }).expect(400);
+
+    // convertir antes de aprobar debe fallar
+    await request(app.getHttpServer()).post(`/api/quotations/${quotation.body.folio}/convert`).set('Authorization', `Bearer ${token}`).expect(400);
+
+    await request(app.getHttpServer()).patch(`/api/quotations/${quotation.body.folio}/status`).set('Authorization', `Bearer ${token}`).send({ status: 'APPROVED' }).expect(200);
+
+    const converted = await request(app.getHttpServer()).post(`/api/quotations/${quotation.body.folio}/convert`).set('Authorization', `Bearer ${token}`).expect(201);
+    expect(converted.body.folio).toMatch(/^OS-/);
+    expect(converted.body.reportedIssue).toBe('No enciende');
+    expect(converted.body.estimatedCost).toBe('650');
+
+    const afterConvert = await request(app.getHttpServer()).get(`/api/quotations/${quotation.body.folio}`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(afterConvert.body.status).toBe('CONVERTED');
+    expect(afterConvert.body.serviceOrder.folio).toBe(converted.body.folio);
+
+    // no se puede convertir dos veces
+    await request(app.getHttpServer()).post(`/api/quotations/${quotation.body.folio}/convert`).set('Authorization', `Bearer ${token}`).expect(400);
+
+    await request(app.getHttpServer()).post('/api/users').set('Authorization', `Bearer ${token}`).send({ name: `E2E Técnico Cotización ${suffix}`, email: `e2e-cot-tech-${suffix}@test.local`, password: 'Tecnico123!', role: 'TECHNICIAN' }).expect(201);
+    const techLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: `e2e-cot-tech-${suffix}@test.local`, password: 'Tecnico123!' }).expect(201);
+    await request(app.getHttpServer()).post('/api/quotations').set('Authorization', `Bearer ${techLogin.body.accessToken}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'E2E', model: 'X', issueDescription: 'x', items: [{ description: 'x', quantity: 1, unitPrice: 1 }] }).expect(403);
+
+    await request(app.getHttpServer()).get('/api/quotations').expect(401);
+  });
 });

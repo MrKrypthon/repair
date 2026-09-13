@@ -15,6 +15,9 @@ const CustomerDetail = Loadable(lazy(() => import('views/customers/detail')));
 const ServiceOrders = Loadable(lazy(() => import('views/service-orders')));
 const NewServiceOrder = Loadable(lazy(() => import('views/service-orders/new')));
 const ServiceOrderDetail = Loadable(lazy(() => import('views/service-orders/detail')));
+const Quotations = Loadable(lazy(() => import('views/quotations')));
+const NewQuotation = Loadable(lazy(() => import('views/quotations/new')));
+const QuotationDetail = Loadable(lazy(() => import('views/quotations/detail')));
 const Inventory = Loadable(lazy(() => import('views/inventory')));
 const Appointments = Loadable(lazy(() => import('views/appointments')));
 const TechnicalKnowledge = Loadable(lazy(() => import('views/technical-knowledge')));
@@ -75,6 +78,18 @@ const MainRoutes = {
     {
       path: 'service-orders/:orderId',
       element: <ServiceOrderDetail />
+    },
+    {
+      path: 'quotations',
+      element: <Quotations />
+    },
+    {
+      path: 'quotations/new',
+      element: <NewQuotation />
+    },
+    {
+      path: 'quotations/:folio',
+      element: <QuotationDetail />
     },
     {
       path: 'inventory',

@@ -105,6 +105,12 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `PATCH /api/purchase-orders/:id/cancel`: cancela una compra no recibida.
 - `POST /api/service-orders/:folio/attachments`: sube una foto o documento (`multipart/form-data`, campo `file`; JPG/PNG/WEBP/PDF, máx. 10MB) al almacenamiento S3-compatible.
 - `DELETE /api/service-orders/:folio/attachments/:attachmentId`: elimina un archivo adjunto de la orden.
+- `GET /api/quotations?status=...`: lista cotizaciones, opcionalmente filtradas por estado.
+- `GET /api/quotations/:folio`: consulta el detalle de una cotización (cliente, equipo, conceptos, orden generada si aplica).
+- `POST /api/quotations`: crea una cotización con sus conceptos (cliente + equipo existente o nuevo); solo Admin/Recepción.
+- `PATCH /api/quotations/:folio`: edita falla, notas, vigencia o conceptos; solo si sigue en borrador.
+- `PATCH /api/quotations/:folio/status`: marca como enviada, aprobada o rechazada; una vez aprobada/rechazada ya no admite más cambios de estado.
+- `POST /api/quotations/:folio/convert`: convierte una cotización aprobada en una orden de servicio nueva (folio `OS-...`), reutilizando cliente, equipo y el total como costo estimado.
 
 ## Módulos previstos
 
