@@ -77,6 +77,8 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `GET /api/inventory`: consulta piezas y existencias.
 - `GET /api/inventory?q=...`: busca piezas por nombre, SKU o categoría.
 - `POST /api/inventory`: crea una pieza o consumible.
+- `PATCH /api/inventory/:id`: edita nombre, categoría, costo, precio, stock mínimo o proveedor. Si cambia el costo o el precio, registra el cambio en el historial.
+- `GET /api/inventory/:id/price-history`: historial de cambios de costo/precio de una pieza (edición manual o recepción de orden de compra).
 - `PATCH /api/inventory/:id/stock`: registra entrada, salida o ajuste de stock. Si el stock cruza el mínimo configurado, crea una notificación interna de tipo `WARNING`.
 - `POST /api/inventory/:id/image`: sube o reemplaza la foto del producto (JPG/PNG/WEBP, máx. 5MB).
 - `DELETE /api/inventory/:id/image`: elimina la foto del producto.

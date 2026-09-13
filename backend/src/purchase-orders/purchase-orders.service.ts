@@ -18,7 +18,13 @@ export class PurchaseOrdersService {
     if (order.status !== 'ORDERED') throw new BadRequestException('Solo se pueden recibir órdenes enviadas');
     return this.prisma.$transaction(async (transaction) => {
       for (const line of order.lines) {
+        const item = await transaction.inventoryItem.findUniqueOrThrow({ where: { id: line.inventoryItemId } });
         await transaction.inventoryItem.update({ where: { id: line.inventoryItemId }, data: { stock: { increment: line.quantity }, cost: line.unitCost } });
+        if (!item.cost.equals(line.unitCost)) {
+          await transaction.inventoryPriceHistory.create({
+            data: { inventoryItemId: line.inventoryItemId, previousCost: item.cost, newCost: line.unitCost, previousSalePrice: item.salePrice, newSalePrice: item.salePrice, source: 'PURCHASE_ORDER', reference: order.folio }
+          });
+        }
         await transaction.inventoryMovement.create({ data: { inventoryItemId: line.inventoryItemId, type: 'IN', quantity: line.quantity, note: `Recepción de ${order.folio}` } });
       }
       return transaction.purchaseOrder.update({ where: { id }, data: { status: 'RECEIVED' }, include: { supplier: true, lines: { include: { inventoryItem: true } } } });

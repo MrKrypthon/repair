@@ -17,3 +17,12 @@ export class StockChangeDto {
   @IsInt() @Min(1) quantity!: number;
   @IsOptional() @IsString() note?: string;
 }
+
+export class UpdateInventoryItemDto {
+  @IsOptional() @IsString() @MinLength(1) name?: string;
+  @IsOptional() @IsString() @MinLength(1) category?: string;
+  @IsOptional() @IsNumber() @Min(0) cost?: number;
+  @IsOptional() @IsNumber() @Min(0) salePrice?: number;
+  @IsOptional() @IsInt() @Min(0) minimumStock?: number;
+  @IsOptional() @IsString() supplierId?: string;
+}

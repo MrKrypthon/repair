@@ -48,6 +48,8 @@ export const api = {
   listInventory: (query = '') => request(`/inventory${query ? `?q=${encodeURIComponent(query)}` : ''}`),
   createInventoryItem: (data) => request('/inventory', { method: 'POST', body: JSON.stringify(data) }),
   adjustInventory: (id, data) => request(`/inventory/${id}/stock`, { method: 'PATCH', body: JSON.stringify(data) }),
+  updateInventoryItem: (id, data) => request(`/inventory/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  getInventoryPriceHistory: (id) => request(`/inventory/${id}/price-history`),
   uploadInventoryImage: (id, file) => {
     const formData = new FormData();
     formData.append('file', file);

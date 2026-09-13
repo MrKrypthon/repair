@@ -297,9 +297,30 @@ model InventoryItem {
   movements    InventoryMovement[]
   orderParts   OrderPart[]
   purchaseLines PurchaseOrderLine[]
+  priceHistory  InventoryPriceHistory[]
   supplier     Supplier?           @relation(fields: [supplierId], references: [id])
 
   @@index([category])
+}
+
+enum PriceChangeSource {
+  MANUAL
+  PURCHASE_ORDER
+}
+
+model InventoryPriceHistory {
+  id                String            @id @default(cuid())
+  inventoryItemId   String
+  previousCost      Decimal           @db.Decimal(12, 2)
+  newCost           Decimal           @db.Decimal(12, 2)
+  previousSalePrice Decimal           @db.Decimal(12, 2)
+  newSalePrice      Decimal           @db.Decimal(12, 2)
+  source            PriceChangeSource
+  reference         String?
+  createdAt         DateTime          @default(now())
+  inventoryItem     InventoryItem     @relation(fields: [inventoryItemId], references: [id])
+
+  @@index([inventoryItemId, createdAt])
 }
 
 model Supplier {

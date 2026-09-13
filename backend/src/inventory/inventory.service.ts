@@ -5,6 +5,7 @@ import { StorageService } from '../storage/storage.service';
 
 type CreateItem = { name: string; sku: string; category: string; cost: number; salePrice: number; stock?: number; minimumStock?: number; supplierId?: string };
 type StockChange = { type: InventoryMovementType; quantity: number; note?: string };
+type UpdateItem = { name?: string; category?: string; cost?: number; salePrice?: number; minimumStock?: number; supplierId?: string };
 
 @Injectable()
 export class InventoryService {
@@ -43,6 +44,30 @@ export class InventoryService {
       }
       return updated;
     });
+  }
+
+  async update(id: string, data: UpdateItem) {
+    const item = await this.prisma.inventoryItem.findUniqueOrThrow({ where: { id } });
+    const nextCost = data.cost !== undefined ? new Prisma.Decimal(data.cost) : item.cost;
+    const nextSalePrice = data.salePrice !== undefined ? new Prisma.Decimal(data.salePrice) : item.salePrice;
+    const priceChanged = !nextCost.equals(item.cost) || !nextSalePrice.equals(item.salePrice);
+
+    return this.prisma.$transaction(async (transaction) => {
+      const updated = await transaction.inventoryItem.update({
+        where: { id },
+        data: { name: data.name, category: data.category, cost: nextCost, salePrice: nextSalePrice, minimumStock: data.minimumStock, supplierId: data.supplierId }
+      });
+      if (priceChanged) {
+        await transaction.inventoryPriceHistory.create({
+          data: { inventoryItemId: id, previousCost: item.cost, newCost: nextCost, previousSalePrice: item.salePrice, newSalePrice: nextSalePrice, source: 'MANUAL' }
+        });
+      }
+      return this.withImageUrl(updated);
+    });
+  }
+
+  priceHistory(id: string) {
+    return this.prisma.inventoryPriceHistory.findMany({ where: { inventoryItemId: id }, orderBy: { createdAt: 'desc' } });
   }
 
   async uploadImage(id: string, file: Express.Multer.File) {

@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
@@ -24,12 +26,20 @@ import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import MenuItem from '@mui/material/MenuItem';
 
 import MainCard from 'ui-component/cards/MainCard';
 import { api } from 'api/client';
+
+const sourceLabel = { MANUAL: 'Edición manual', PURCHASE_ORDER: 'Recepción de compra' };
 
 const demoItems = [
   { id: 'demo-1', name: 'Pantalla iPhone 12 OLED', sku: 'SCR-IP12-OLED', category: 'Pantallas', cost: 1850, salePrice: 2800, stock: 3, minimumStock: 2, imageUrl: null },
@@ -47,7 +57,7 @@ function ProductImageInput({ onSelect, children }) {
   );
 }
 
-function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemove }) {
+function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemove, onEdit, onHistory }) {
   const lowStock = item.stock <= item.minimumStock;
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -85,7 +95,9 @@ function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemov
       </CardContent>
       {!isTechnician && (
         <CardActions>
-          <Button size="small" fullWidth onClick={() => onAdjust(item)}>Ajustar stock</Button>
+          <Button size="small" sx={{ flex: 1 }} onClick={() => onAdjust(item)}>Ajustar stock</Button>
+          <Tooltip title="Editar precio/pieza"><IconButton size="small" onClick={() => onEdit(item)}><EditRoundedIcon fontSize="small" /></IconButton></Tooltip>
+          <Tooltip title="Historial de precios"><IconButton size="small" onClick={() => onHistory(item)}><HistoryRoundedIcon fontSize="small" /></IconButton></Tooltip>
         </CardActions>
       )}
     </Card>
@@ -106,6 +118,12 @@ export default function Inventory() {
   const [newItemImage, setNewItemImage] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
   const [stockForm, setStockForm] = useState({ type: 'IN', quantity: 1, note: '' });
+  const [editItem, setEditItem] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', category: '', cost: '', salePrice: '', minimumStock: 0, supplierId: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [historyItem, setHistoryItem] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const load = (search) => api.listInventory(search).then((records) => { setItems(records); setError(''); }).catch(() => setError('No se pudo conectar con la API. Mostrando inventario de ejemplo.')).finally(() => setLoading(false));
 
@@ -135,6 +153,25 @@ export default function Inventory() {
   const changeImage = (id, file) => api.uploadInventoryImage(id, file).then(() => load(query)).catch(() => setError('No se pudo subir la imagen.'));
   const removeImage = (id) => api.removeInventoryImage(id).then(() => load(query)).catch(() => setError('No se pudo eliminar la imagen.'));
 
+  const openEdit = (item) => {
+    setEditItem(item);
+    setEditForm({ name: item.name, category: item.category, cost: item.cost, salePrice: item.salePrice, minimumStock: item.minimumStock, supplierId: item.supplierId || '' });
+  };
+  const saveEdit = (event) => {
+    event.preventDefault();
+    setSavingEdit(true);
+    api.updateInventoryItem(editItem.id, { ...editForm, cost: Number(editForm.cost), salePrice: Number(editForm.salePrice), minimumStock: Number(editForm.minimumStock), supplierId: editForm.supplierId || undefined })
+      .then(() => { setEditItem(null); return load(query); })
+      .catch(() => setError('No se pudo actualizar la pieza.'))
+      .finally(() => setSavingEdit(false));
+  };
+
+  const openHistory = (item) => {
+    setHistoryItem(item);
+    setLoadingHistory(true);
+    api.getInventoryPriceHistory(item.id).then(setHistory).catch(() => setHistory([])).finally(() => setLoadingHistory(false));
+  };
+
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Inventario</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Piezas, componentes y consumibles del taller.</Typography></Box>{!isTechnician && <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={() => setNewItemOpen(true)}>Nueva pieza</Button>}</Stack>
@@ -159,7 +196,7 @@ export default function Inventory() {
         <Grid container spacing={2.5}>
           {filtered.map((item) => (
             <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3 }}>
-              <ProductCard item={item} isTechnician={isTechnician} onAdjust={setStockItem} onImageSelect={changeImage} onImageRemove={removeImage} />
+              <ProductCard item={item} isTechnician={isTechnician} onAdjust={setStockItem} onImageSelect={changeImage} onImageRemove={removeImage} onEdit={openEdit} onHistory={openHistory} />
             </Grid>
           ))}
         </Grid>
@@ -167,6 +204,67 @@ export default function Inventory() {
 
       <Dialog open={newItemOpen} onClose={() => setNewItemOpen(false)} fullWidth maxWidth="sm"><DialogTitle>Nueva pieza</DialogTitle><Stack component="form" onSubmit={createItem}><DialogContent><Stack spacing={2} sx={{ pt: 1 }}><TextField required fullWidth label="Nombre" value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} /><Stack direction="row" spacing={2}><TextField required fullWidth label="SKU" value={itemForm.sku} onChange={(event) => setItemForm({ ...itemForm, sku: event.target.value })} /><TextField required fullWidth label="Categoría" value={itemForm.category} onChange={(event) => setItemForm({ ...itemForm, category: event.target.value })} /></Stack><TextField select fullWidth label="Proveedor" value={itemForm.supplierId || ''} onChange={(event) => setItemForm({ ...itemForm, supplierId: event.target.value })}><MenuItem value="">Sin proveedor</MenuItem>{suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.name}</MenuItem>)}</TextField><Stack direction="row" spacing={2}><TextField required type="number" fullWidth label="Costo" value={itemForm.cost} onChange={(event) => setItemForm({ ...itemForm, cost: event.target.value })} /><TextField required type="number" fullWidth label="Precio sugerido" value={itemForm.salePrice} onChange={(event) => setItemForm({ ...itemForm, salePrice: event.target.value })} /></Stack><Stack direction="row" spacing={2}><TextField type="number" fullWidth label="Stock inicial" value={itemForm.stock} onChange={(event) => setItemForm({ ...itemForm, stock: event.target.value })} /><TextField type="number" fullWidth label="Stock mínimo" value={itemForm.minimumStock} onChange={(event) => setItemForm({ ...itemForm, minimumStock: event.target.value })} /></Stack><Button component="label" variant="outlined" startIcon={<PhotoCameraRoundedIcon />}>{newItemImage ? newItemImage.name : 'Agregar foto (opcional)'}<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => setNewItemImage(event.target.files?.[0] || null)} /></Button></Stack></DialogContent><DialogActions><Button onClick={() => setNewItemOpen(false)}>Cancelar</Button><Button type="submit" variant="contained">Guardar</Button></DialogActions></Stack></Dialog>
       <Dialog open={Boolean(stockItem)} onClose={() => setStockItem(null)} fullWidth maxWidth="xs"><DialogTitle>Ajustar stock</DialogTitle><Stack component="form" onSubmit={adjustStock}><DialogContent><Stack spacing={2} sx={{ pt: 1 }}><Typography>{stockItem?.name}</Typography><TextField select fullWidth label="Movimiento" value={stockForm.type} onChange={(event) => setStockForm({ ...stockForm, type: event.target.value })}><MenuItem value="IN">Entrada</MenuItem><MenuItem value="OUT">Salida</MenuItem><MenuItem value="ADJUSTMENT">Ajuste positivo</MenuItem></TextField><TextField required type="number" fullWidth label="Cantidad" value={stockForm.quantity} onChange={(event) => setStockForm({ ...stockForm, quantity: event.target.value })} inputProps={{ min: 1 }} /><TextField fullWidth label="Nota" value={stockForm.note} onChange={(event) => setStockForm({ ...stockForm, note: event.target.value })} /></Stack></DialogContent><DialogActions><Button onClick={() => setStockItem(null)}>Cancelar</Button><Button type="submit" variant="contained">Aplicar</Button></DialogActions></Stack></Dialog>
+
+      <Dialog open={Boolean(editItem)} onClose={() => setEditItem(null)} fullWidth maxWidth="sm">
+        <DialogTitle>Editar pieza</DialogTitle>
+        <Stack component="form" onSubmit={saveEdit}>
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <TextField required fullWidth label="Nombre" value={editForm.name} onChange={(event) => setEditForm({ ...editForm, name: event.target.value })} />
+              <TextField required fullWidth label="Categoría" value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} />
+              <TextField select fullWidth label="Proveedor" value={editForm.supplierId} onChange={(event) => setEditForm({ ...editForm, supplierId: event.target.value })}>
+                <MenuItem value="">Sin proveedor</MenuItem>
+                {suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.name}</MenuItem>)}
+              </TextField>
+              <Stack direction="row" spacing={2}>
+                <TextField required type="number" fullWidth label="Costo" value={editForm.cost} onChange={(event) => setEditForm({ ...editForm, cost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} />
+                <TextField required type="number" fullWidth label="Precio sugerido" value={editForm.salePrice} onChange={(event) => setEditForm({ ...editForm, salePrice: event.target.value })} inputProps={{ min: 0, step: '0.01' }} />
+              </Stack>
+              <TextField type="number" fullWidth label="Stock mínimo" value={editForm.minimumStock} onChange={(event) => setEditForm({ ...editForm, minimumStock: event.target.value })} inputProps={{ min: 0 }} />
+              <Typography variant="caption" color="text.secondary">Si cambiás el costo o el precio, queda registrado en el historial de precios de esta pieza.</Typography>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditItem(null)}>Cancelar</Button>
+            <Button type="submit" variant="contained" disabled={savingEdit}>{savingEdit ? 'Guardando...' : 'Guardar'}</Button>
+          </DialogActions>
+        </Stack>
+      </Dialog>
+
+      <Dialog open={Boolean(historyItem)} onClose={() => setHistoryItem(null)} fullWidth maxWidth="sm">
+        <DialogTitle>Historial de precios · {historyItem?.name}</DialogTitle>
+        <DialogContent>
+          {loadingHistory ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={24} /></Box>
+          ) : history.length === 0 ? (
+            <Typography color="text.secondary" sx={{ py: 3 }}>Esta pieza todavía no tiene cambios de costo o precio registrados.</Typography>
+          ) : (
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Fecha</TableCell>
+                  <TableCell>Costo</TableCell>
+                  <TableCell>Precio</TableCell>
+                  <TableCell>Origen</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {history.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(entry.createdAt).toLocaleDateString('es-MX')}</TableCell>
+                    <TableCell>${Number(entry.previousCost).toLocaleString('es-MX')} → ${Number(entry.newCost).toLocaleString('es-MX')}</TableCell>
+                    <TableCell>${Number(entry.previousSalePrice).toLocaleString('es-MX')} → ${Number(entry.newSalePrice).toLocaleString('es-MX')}</TableCell>
+                    <TableCell>{sourceLabel[entry.source] || entry.source}{entry.reference ? ` · ${entry.reference}` : ''}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHistoryItem(null)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

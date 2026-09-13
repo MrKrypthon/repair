@@ -352,4 +352,42 @@ describe('Electrónica Tech API (e2e)', () => {
 
     await request(app.getHttpServer()).get('/api/analytics/technicians').set('Authorization', `Bearer ${techLogin.body.accessToken}`).expect(403);
   });
+
+  it('tracks price history from manual edits and purchase order receipts', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+
+    const item = await request(app.getHttpServer()).post('/api/inventory').set('Authorization', `Bearer ${token}`).send({ name: `Pieza Historial ${suffix}`, sku: `HIST-${suffix}`, category: 'Test', cost: 10, salePrice: 25, stock: 5, minimumStock: 1 }).expect(201);
+
+    const emptyHistory = await request(app.getHttpServer()).get(`/api/inventory/${item.body.id}/price-history`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(emptyHistory.body).toHaveLength(0);
+
+    // editar sin tocar costo/precio no debe generar historial
+    await request(app.getHttpServer()).patch(`/api/inventory/${item.body.id}`).set('Authorization', `Bearer ${token}`).send({ minimumStock: 2 }).expect(200);
+    const stillEmpty = await request(app.getHttpServer()).get(`/api/inventory/${item.body.id}/price-history`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(stillEmpty.body).toHaveLength(0);
+
+    // edición manual de costo/precio sí genera historial
+    const edited = await request(app.getHttpServer()).patch(`/api/inventory/${item.body.id}`).set('Authorization', `Bearer ${token}`).send({ cost: 15, salePrice: 30 }).expect(200);
+    expect(edited.body.cost).toBe('15');
+    const afterManual = await request(app.getHttpServer()).get(`/api/inventory/${item.body.id}/price-history`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(afterManual.body).toHaveLength(1);
+    expect(afterManual.body[0].source).toBe('MANUAL');
+    expect(afterManual.body[0].previousCost).toBe('10');
+    expect(afterManual.body[0].newCost).toBe('15');
+
+    // recibir una orden de compra con costo distinto también genera historial
+    const supplier = await request(app.getHttpServer()).post('/api/suppliers').set('Authorization', `Bearer ${token}`).send({ name: `Proveedor Historial ${suffix}` }).expect(201);
+    const purchaseOrder = await request(app.getHttpServer()).post('/api/purchase-orders').set('Authorization', `Bearer ${token}`).send({ supplierId: supplier.body.id, lines: [{ inventoryItemId: item.body.id, quantity: 2, unitCost: 22 }] }).expect(201);
+    await request(app.getHttpServer()).patch(`/api/purchase-orders/${purchaseOrder.body.id}/order`).set('Authorization', `Bearer ${token}`).expect(200);
+    await request(app.getHttpServer()).patch(`/api/purchase-orders/${purchaseOrder.body.id}/receive`).set('Authorization', `Bearer ${token}`).expect(200);
+
+    const afterReceive = await request(app.getHttpServer()).get(`/api/inventory/${item.body.id}/price-history`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(afterReceive.body).toHaveLength(2);
+    const fromPurchaseOrder = afterReceive.body.find((entry: { source: string }) => entry.source === 'PURCHASE_ORDER');
+    expect(fromPurchaseOrder.previousCost).toBe('15');
+    expect(fromPurchaseOrder.newCost).toBe('22');
+    expect(fromPurchaseOrder.reference).toBe(purchaseOrder.body.folio);
+  });
 });

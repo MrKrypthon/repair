@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { InventoryService } from './inventory.service';
-import { CreateInventoryItemDto, StockChangeDto } from './dto/create-inventory-item.dto';
+import { CreateInventoryItemDto, StockChangeDto, UpdateInventoryItemDto } from './dto/create-inventory-item.dto';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -21,6 +21,14 @@ export class InventoryController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST')
   create(@Body() body: CreateInventoryItemDto) { return this.inventoryService.create(body); }
+
+  @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'RECEPTIONIST')
+  update(@Param('id') id: string, @Body() body: UpdateInventoryItemDto) { return this.inventoryService.update(id, body); }
+
+  @Get(':id/price-history')
+  priceHistory(@Param('id') id: string) { return this.inventoryService.priceHistory(id); }
 
   @Patch(':id/stock')
   @UseGuards(RolesGuard)
