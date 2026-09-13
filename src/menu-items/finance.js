@@ -1,14 +1,14 @@
 // assets
-import { IconReportMoney } from '@tabler/icons-react';
+import { IconReportMoney, IconUsers } from '@tabler/icons-react';
 
 // constant
-const icons = { IconReportMoney };
+const icons = { IconReportMoney, IconUsers };
 
-// ==============================|| FINANCE MENU ITEMS ||============================== //
+// ==============================|| REPORTS MENU ITEMS (ADMIN) ||============================== //
 
 const finance = {
   id: 'finance',
-  title: 'Finanzas',
+  title: 'Reportes',
   type: 'group',
   children: [
     {
@@ -17,6 +17,14 @@ const finance = {
       type: 'item',
       url: '/finance',
       icon: icons.IconReportMoney,
+      breadcrumbs: false
+    },
+    {
+      id: 'technician-productivity',
+      title: 'Productividad',
+      type: 'item',
+      url: '/productivity',
+      icon: icons.IconUsers,
       breadcrumbs: false
     }
   ]

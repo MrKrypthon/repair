@@ -86,6 +86,13 @@ export const api = {
   createTechnicalDocument: (data) => request('/technical-knowledge', { method: 'POST', body: JSON.stringify(data) }),
   getDashboardMetrics: () => request('/analytics/dashboard'),
   globalSearch: (q) => request(`/search?q=${encodeURIComponent(q)}`),
+  getTechnicianReport: (from, to) => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const query = params.toString();
+    return request(`/analytics/technicians${query ? `?${query}` : ''}`);
+  },
   getFinanceSummary: (from, to) => {
     const params = new URLSearchParams();
     if (from) params.set('from', from);

@@ -27,4 +27,43 @@ export class AnalyticsService {
     const estimatedProfit = revenue - partsCost;
     return { inRepair, ready, pendingAuthorization, overdue, lowStock, totalCollected: payments._sum.amount || 0, customers, receivedToday, estimatedProfit, margin: revenue ? (estimatedProfit / revenue) * 100 : 0 };
   }
+
+  async technicianReport(from?: string, to?: string) {
+    const start = from ? new Date(from) : undefined;
+    const end = to ? new Date(to) : undefined;
+    const deliveredFilter = start || end ? { gte: start, lte: end } : undefined;
+
+    const technicians = await this.prisma.user.findMany({ where: { role: 'TECHNICIAN' }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
+
+    const rows = await Promise.all(
+      technicians.map(async (technician) => {
+        const [closedOrders, activeOrders] = await Promise.all([
+          this.prisma.serviceOrder.findMany({
+            where: { assignedTechnicianId: technician.id, status: ServiceOrderStatus.ENTREGADO, ...(deliveredFilter ? { deliveredAt: deliveredFilter } : {}) },
+            select: { receivedAt: true, deliveredAt: true, finalCost: true, estimatedCost: true, parts: { select: { unitCost: true, quantity: true } } }
+          }),
+          this.prisma.serviceOrder.count({
+            where: { assignedTechnicianId: technician.id, status: { notIn: [ServiceOrderStatus.ENTREGADO, ServiceOrderStatus.CANCELADO, ServiceOrderStatus.SIN_REPARACION] } }
+          })
+        ]);
+
+        const closedCount = closedOrders.length;
+        const totalDays = closedOrders.reduce((sum, order) => sum + (order.deliveredAt ? (order.deliveredAt.getTime() - order.receivedAt.getTime()) / 86400000 : 0), 0);
+        const revenue = closedOrders.reduce((sum, order) => sum + Number(order.finalCost || order.estimatedCost || 0), 0);
+        const partsCost = closedOrders.reduce((sum, order) => sum + order.parts.reduce((partSum, part) => partSum + Number(part.unitCost) * part.quantity, 0), 0);
+
+        return {
+          id: technician.id,
+          name: technician.name,
+          closedOrders: closedCount,
+          activeOrders,
+          avgRepairDays: closedCount ? totalDays / closedCount : 0,
+          revenue,
+          profit: revenue - partsCost
+        };
+      })
+    );
+
+    return rows.sort((a, b) => b.closedOrders - a.closedOrders);
+  }
 }

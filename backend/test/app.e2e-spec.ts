@@ -323,4 +323,33 @@ describe('Electrónica Tech API (e2e)', () => {
 
     await request(app.getHttpServer()).get('/api/search').expect(401);
   });
+
+  it('reports technician productivity restricted to admin', async () => {
+    const adminLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const adminToken = adminLogin.body.accessToken;
+    const suffix = Date.now();
+
+    const tech = await request(app.getHttpServer()).post('/api/users').set('Authorization', `Bearer ${adminToken}`).send({ name: `E2E Técnico Productividad ${suffix}`, email: `e2e-prod-${suffix}@test.local`, password: 'Tecnico123!', role: 'TECHNICIAN' }).expect(201);
+    const techLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: `e2e-prod-${suffix}@test.local`, password: 'Tecnico123!' }).expect(201);
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${adminToken}`).send({ name: 'E2E Cliente Productividad', phone: `564${suffix}`, email: `e2e-prodc-${suffix}@test.local` }).expect(201);
+    const order = await request(app.getHttpServer()).post('/api/service-orders').set('Authorization', `Bearer ${adminToken}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'Test', model: 'E2E Productividad', reportedIssue: 'No enciende', priority: 'NORMAL' }).expect(201);
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order.body.folio}/technician`).set('Authorization', `Bearer ${adminToken}`).send({ technicianId: tech.body.id }).expect(200);
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order.body.folio}/budget`).set('Authorization', `Bearer ${adminToken}`).send({ partsCost: 0, laborCost: 500, otherCharges: 0, finalCost: 500, budgetStatus: 'APPROVED' }).expect(200);
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order.body.folio}/status`).set('Authorization', `Bearer ${adminToken}`).send({ status: 'LISTO_ENTREGA' }).expect(200);
+    await request(app.getHttpServer()).post(`/api/service-orders/${order.body.folio}/deliver`).set('Authorization', `Bearer ${adminToken}`).send({}).expect(201);
+
+    const report = await request(app.getHttpServer()).get('/api/analytics/technicians').set('Authorization', `Bearer ${adminToken}`).expect(200);
+    const row = report.body.find((r: { id: string }) => r.id === tech.body.id);
+    expect(row).toBeDefined();
+    expect(row.closedOrders).toBeGreaterThanOrEqual(1);
+    expect(row.revenue).toBeGreaterThanOrEqual(500);
+    expect(row.profit).toBeGreaterThanOrEqual(500);
+
+    const futureReport = await request(app.getHttpServer()).get('/api/analytics/technicians?from=2099-01-01').set('Authorization', `Bearer ${adminToken}`).expect(200);
+    const futureRow = futureReport.body.find((r: { id: string }) => r.id === tech.body.id);
+    expect(futureRow.closedOrders).toBe(0);
+
+    await request(app.getHttpServer()).get('/api/analytics/technicians').set('Authorization', `Bearer ${techLogin.body.accessToken}`).expect(403);
+  });
 });

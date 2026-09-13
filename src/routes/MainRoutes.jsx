@@ -8,6 +8,7 @@ import RequireAuth from './RequireAuth';
 // dashboard routing
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')));
 const Finance = Loadable(lazy(() => import('views/finance')));
+const TechnicianProductivity = Loadable(lazy(() => import('views/technician-productivity')));
 const Customers = Loadable(lazy(() => import('views/customers')));
 const NewCustomer = Loadable(lazy(() => import('views/customers/new')));
 const CustomerDetail = Loadable(lazy(() => import('views/customers/detail')));
@@ -46,6 +47,10 @@ const MainRoutes = {
     {
       path: 'finance',
       element: <Finance />
+    },
+    {
+      path: 'productivity',
+      element: <TechnicianProductivity />
     },
     {
       path: 'customers',
