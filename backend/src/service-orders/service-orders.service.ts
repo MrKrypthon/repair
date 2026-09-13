@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { AttachmentCategory, BudgetStatus, DeviceCategory, Prisma, ServiceOrderStatus } from '@prisma/client';
+import { AttachmentCategory, BudgetStatus, DeviceCategory, Priority, Prisma, ServiceOrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -42,7 +42,9 @@ export class ServiceOrdersService {
         statusHistory: { orderBy: { createdAt: 'asc' } },
         payments: { orderBy: { createdAt: 'desc' } },
         parts: { include: { inventoryItem: true }, orderBy: { createdAt: 'desc' } },
-        attachments: { orderBy: { createdAt: 'desc' } }
+        attachments: { orderBy: { createdAt: 'desc' } },
+        warrantyForOrder: { select: { folio: true } },
+        warrantyClaims: { select: { folio: true, status: true, receivedAt: true }, orderBy: { receivedAt: 'desc' } }
       }
     });
     return { ...order, attachments: order.attachments.map((attachment) => ({ ...attachment, url: this.storage.getUrl(attachment.key) })) };
@@ -128,14 +130,39 @@ export class ServiceOrdersService {
     return this.prisma.serviceOrder.update({ where: { folio }, data: { assignedTechnicianId: technicianId || null }, include: { assignedTechnician: true } });
   }
 
-  async deliver(folio: string, note?: string) {
+  async deliver(folio: string, note?: string, warrantyDays?: number) {
     const order = await this.prisma.serviceOrder.findUniqueOrThrow({ where: { folio } });
     if (order.status !== ServiceOrderStatus.LISTO_ENTREGA) throw new BadRequestException('La orden debe estar lista para entrega');
+    const deliveredAt = new Date();
+    const warrantyExpiresAt = warrantyDays ? new Date(deliveredAt.getTime() + warrantyDays * 86400000) : undefined;
     return this.prisma.$transaction(async (transaction) => {
-      const delivered = await transaction.serviceOrder.update({ where: { folio }, data: { status: ServiceOrderStatus.ENTREGADO, deliveredAt: new Date() } });
+      const delivered = await transaction.serviceOrder.update({ where: { folio }, data: { status: ServiceOrderStatus.ENTREGADO, deliveredAt, warrantyDays, warrantyExpiresAt } });
       await transaction.statusHistory.create({ data: { serviceOrderId: order.id, previousStatus: order.status, newStatus: ServiceOrderStatus.ENTREGADO, note: note || 'Equipo entregado al cliente' } });
-      await transaction.notification.create({ data: { title: 'Orden entregada', message: `La orden ${folio} fue marcada como entregada.`, type: 'SUCCESS' } });
+      await transaction.notification.create({ data: { title: 'Orden entregada', message: `La orden ${folio} fue marcada como entregada.${warrantyDays ? ` Garantía de ${warrantyDays} días.` : ''}`, type: 'SUCCESS' } });
       return delivered;
+    });
+  }
+
+  async createWarrantyClaim(folio: string, data: { reportedIssue: string; priority?: Priority }) {
+    const original = await this.prisma.serviceOrder.findUniqueOrThrow({ where: { folio } });
+    if (original.status !== ServiceOrderStatus.ENTREGADO) throw new BadRequestException('Solo se puede abrir garantía sobre una orden entregada');
+    if (!original.warrantyExpiresAt || original.warrantyExpiresAt < new Date()) throw new BadRequestException('Esta orden no tiene garantía vigente');
+
+    const claimFolio = `GA-${Date.now().toString().slice(-6)}`;
+    return this.prisma.$transaction(async (transaction) => {
+      return transaction.serviceOrder.create({
+        data: {
+          folio: claimFolio,
+          publicTrackingToken: randomBytes(24).toString('hex'),
+          customerId: original.customerId,
+          deviceId: original.deviceId,
+          reportedIssue: data.reportedIssue,
+          priority: data.priority || original.priority,
+          warrantyForOrderId: original.id,
+          statusHistory: { create: { newStatus: ServiceOrderStatus.RECIBIDO, note: `Reclamo de garantía de la orden ${original.folio}` } }
+        },
+        include: { customer: true, device: true, statusHistory: true }
+      });
     });
   }
 
@@ -173,6 +200,8 @@ export class ServiceOrdersService {
         estimatedDeliveryAt: true,
         estimatedCost: true,
         budgetStatus: true,
+        warrantyDays: true,
+        warrantyExpiresAt: true,
         device: { select: { category: true, brand: true, model: true } },
         statusHistory: { select: { newStatus: true, note: true, createdAt: true }, orderBy: { createdAt: 'asc' } },
         attachments: { where: { category: 'PHOTO' }, select: { id: true, fileName: true, key: true, createdAt: true }, orderBy: { createdAt: 'desc' } }

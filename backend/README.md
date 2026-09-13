@@ -68,7 +68,8 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `PATCH /api/service-orders/:folio/technician`: asigna o desasigna un técnico.
 - `GET /api/public/tracking/:token`: consulta pública y segura del estado de una orden.
 - `PATCH /api/public/tracking/:token/budget`: autoriza o rechaza el presupuesto desde el portal público.
-- `POST /api/service-orders/:folio/deliver`: cierra la orden y registra la entrega.
+- `POST /api/service-orders/:folio/deliver`: cierra la orden, registra la entrega y, si se indica `warrantyDays`, calcula la fecha de vencimiento de garantía.
+- `POST /api/service-orders/:folio/warranty-claim`: abre una nueva orden (folio `GA-...`) vinculada a la original, reutilizando cliente y equipo. Solo si la orden original está entregada y su garantía sigue vigente.
 - `POST /api/service-orders/:folio/notes`: añade una nota técnica o medición a la orden.
 - `GET /api/service-orders/:folio/payments`: consulta los pagos de una orden.
 - `POST /api/service-orders/:folio/payments`: registra un pago para una orden.

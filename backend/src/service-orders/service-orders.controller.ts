@@ -8,6 +8,7 @@ import { DeliverOrderDto, UpdateDiagnosisDto } from './dto/update-diagnosis.dto'
 import { CreateTechnicalNoteDto } from './dto/create-technical-note.dto';
 import { CreateAttachmentDto } from './dto/create-attachment.dto';
 import { UpdateServiceOrderDto } from './dto/update-service-order.dto';
+import { CreateWarrantyClaimDto } from './dto/create-warranty-claim.dto';
 import { AssignTechnicianDto } from './dto/assign-technician.dto';
 import { ServiceOrdersService } from './service-orders.service';
 
@@ -82,7 +83,14 @@ export class ServiceOrdersController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'RECEPTIONIST')
   deliver(@Param('folio') folio: string, @Body() body: DeliverOrderDto) {
-    return this.serviceOrdersService.deliver(folio, body.note);
+    return this.serviceOrdersService.deliver(folio, body.note, body.warrantyDays);
+  }
+
+  @Post(':folio/warranty-claim')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'RECEPTIONIST')
+  createWarrantyClaim(@Param('folio') folio: string, @Body() body: CreateWarrantyClaimDto) {
+    return this.serviceOrdersService.createWarrantyClaim(folio, body);
   }
 
   @Post(':folio/notes')

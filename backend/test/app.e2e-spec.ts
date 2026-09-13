@@ -256,4 +256,47 @@ describe('Electrónica Tech API (e2e)', () => {
     notifications = await request(app.getHttpServer()).get('/api/notifications').set('Authorization', `Bearer ${token}`).expect(200);
     expect(notifications.body.some((n: { message: string }) => n.message.includes(`LOW2-${suffix}`))).toBe(true);
   });
+
+  it('tracks warranty on delivery and links a warranty claim to the original order', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${token}`).send({ name: 'E2E Cliente Garantía', phone: `562${suffix}`, email: `e2e-warranty-${suffix}@test.local` }).expect(201);
+    const order = await request(app.getHttpServer()).post('/api/service-orders').set('Authorization', `Bearer ${token}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'Test', model: 'E2E Garantía', reportedIssue: 'Pantalla rota', priority: 'NORMAL' }).expect(201);
+
+    // sin garantía vigente: entregar sin marcar LISTO_ENTREGA primero debe fallar
+    await request(app.getHttpServer()).post(`/api/service-orders/${order.body.folio}/warranty-claim`).set('Authorization', `Bearer ${token}`).send({ reportedIssue: 'x' }).expect(400);
+
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order.body.folio}/status`).set('Authorization', `Bearer ${token}`).send({ status: 'LISTO_ENTREGA' }).expect(200);
+    const delivered = await request(app.getHttpServer()).post(`/api/service-orders/${order.body.folio}/deliver`).set('Authorization', `Bearer ${token}`).send({ warrantyDays: 30 }).expect(201);
+    expect(delivered.body.warrantyDays).toBe(30);
+    expect(new Date(delivered.body.warrantyExpiresAt).getTime()).toBeGreaterThan(Date.now());
+
+    const claim = await request(app.getHttpServer())
+      .post(`/api/service-orders/${order.body.folio}/warranty-claim`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ reportedIssue: 'Volvió a fallar la pantalla' })
+      .expect(201);
+    expect(claim.body.folio).toMatch(/^GA-/);
+    expect(claim.body.status).toBe('RECIBIDO');
+    expect(claim.body.customerId).toBe(customer.body.id);
+    expect(claim.body.deviceId).toBe(delivered.body.deviceId);
+
+    const originalDetail = await request(app.getHttpServer()).get(`/api/service-orders/${order.body.folio}`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(originalDetail.body.warrantyClaims).toHaveLength(1);
+    expect(originalDetail.body.warrantyClaims[0].folio).toBe(claim.body.folio);
+
+    const claimDetail = await request(app.getHttpServer()).get(`/api/service-orders/${claim.body.folio}`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(claimDetail.body.warrantyForOrder.folio).toBe(order.body.folio);
+
+    // segunda orden entregada sin garantía: el reclamo debe rechazarse
+    const order2 = await request(app.getHttpServer()).post('/api/service-orders').set('Authorization', `Bearer ${token}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'Test', model: 'E2E Sin Garantía', reportedIssue: 'x', priority: 'NORMAL' }).expect(201);
+    await request(app.getHttpServer()).patch(`/api/service-orders/${order2.body.folio}/status`).set('Authorization', `Bearer ${token}`).send({ status: 'LISTO_ENTREGA' }).expect(200);
+    await request(app.getHttpServer()).post(`/api/service-orders/${order2.body.folio}/deliver`).set('Authorization', `Bearer ${token}`).send({}).expect(201);
+    await request(app.getHttpServer()).post(`/api/service-orders/${order2.body.folio}/warranty-claim`).set('Authorization', `Bearer ${token}`).send({ reportedIssue: 'x' }).expect(400);
+
+    const publicView = await request(app.getHttpServer()).get(`/api/public/tracking/${delivered.body.publicTrackingToken}`).expect(200);
+    expect(publicView.body.warrantyDays).toBe(30);
+  });
 });

@@ -89,6 +89,10 @@ export function generateOrderPdf(order) {
     y += 6;
     doc.text(`Entrega estimada: ${new Date(order.estimatedDeliveryAt).toLocaleDateString('es-MX')}`, marginX, y);
   }
+  if (order.warrantyExpiresAt) {
+    y += 6;
+    doc.text(`Garantía: ${order.warrantyDays} días · vigente hasta ${new Date(order.warrantyExpiresAt).toLocaleDateString('es-MX')}`, marginX, y);
+  }
 
   y += 12;
   doc.setDrawColor(220, 220, 220);

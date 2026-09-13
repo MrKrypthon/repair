@@ -5,6 +5,8 @@ import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
+import GppBadRoundedIcon from '@mui/icons-material/GppBadRounded';
+import GppGoodRoundedIcon from '@mui/icons-material/GppGoodRounded';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -52,6 +54,7 @@ export default function Tracking() {
   if (!order) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 12 }}><CircularProgress /></Box>;
 
   const isTerminalOutcome = order.status === 'CANCELADO' || order.status === 'SIN_REPARACION';
+  const warrantyActive = Boolean(order.warrantyExpiresAt && new Date(order.warrantyExpiresAt) >= new Date());
 
   return (
     <Card sx={{ maxWidth: 720, mx: 'auto', mt: { xs: 3, md: 8 } }}>
@@ -91,6 +94,18 @@ export default function Tracking() {
               </Box>
             </Stack>
           </Box>
+
+          {order.warrantyExpiresAt && (
+            <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                {warrantyActive ? <GppGoodRoundedIcon color="success" /> : <GppBadRoundedIcon color="disabled" />}
+                <Box>
+                  <Typography variant="h4">{warrantyActive ? 'Garantía vigente' : 'Garantía vencida'}</Typography>
+                  <Typography color="text.secondary">{order.warrantyDays} días · hasta {new Date(order.warrantyExpiresAt).toLocaleDateString('es-MX')}</Typography>
+                </Box>
+              </Stack>
+            </Box>
+          )}
 
           {order.estimatedCost && (
             <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>

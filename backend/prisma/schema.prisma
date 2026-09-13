@@ -184,11 +184,16 @@ model ServiceOrder {
   receivedAt            DateTime           @default(now())
   estimatedDeliveryAt   DateTime?
   deliveredAt           DateTime?
+  warrantyDays          Int?
+  warrantyExpiresAt     DateTime?
+  warrantyForOrderId    String?
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   customer              Customer           @relation(fields: [customerId], references: [id])
   device                Device             @relation(fields: [deviceId], references: [id])
   assignedTechnician    User?              @relation("AssignedOrders", fields: [assignedTechnicianId], references: [id])
+  warrantyForOrder      ServiceOrder?      @relation("OrderWarranty", fields: [warrantyForOrderId], references: [id])
+  warrantyClaims        ServiceOrder[]     @relation("OrderWarranty")
   statusHistory         StatusHistory[]
   payments              Payment[]
   parts                 OrderPart[]
@@ -198,6 +203,7 @@ model ServiceOrder {
 
   @@index([status])
   @@index([customerId])
+  @@index([warrantyForOrderId])
 }
 
 model OrderAttachment {

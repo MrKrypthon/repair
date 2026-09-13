@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import AssignmentReturnRoundedIcon from '@mui/icons-material/AssignmentReturnRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import DeviceHubRoundedIcon from '@mui/icons-material/DeviceHubRounded';
+import GppBadRoundedIcon from '@mui/icons-material/GppBadRounded';
+import GppGoodRoundedIcon from '@mui/icons-material/GppGoodRounded';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
@@ -18,6 +21,10 @@ import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Grid from '@mui/material/Grid';
@@ -55,6 +62,7 @@ const statusLabel = (value) => statuses.find(([key]) => key === value)?.[1] || v
 
 export default function ServiceOrderDetail() {
   const { orderId } = useParams();
+  const navigate = useNavigate();
   const isTechnician = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role === 'TECHNICIAN';
   const [order, setOrder] = useState(null);
   const [status, setStatus] = useState('');
@@ -81,6 +89,11 @@ export default function ServiceOrderDetail() {
   const fileInputRef = useRef(null);
   const [orderEdit, setOrderEdit] = useState({ reportedIssue: '', priority: 'NORMAL', estimatedDeliveryAt: '', device: { category: 'CELULAR', brand: '', model: '', serialNumber: '', imei: '', color: '' } });
   const [savingOrderEdit, setSavingOrderEdit] = useState(false);
+  const [deliverDialogOpen, setDeliverDialogOpen] = useState(false);
+  const [deliverForm, setDeliverForm] = useState({ warrantyDays: '30', note: '' });
+  const [claimDialogOpen, setClaimDialogOpen] = useState(false);
+  const [claimForm, setClaimForm] = useState({ reportedIssue: '', priority: 'NORMAL' });
+  const [creatingClaim, setCreatingClaim] = useState(false);
 
   const loadOrder = () => api.getServiceOrder(orderId).then((data) => { setOrder(data); setStatus(data.status); setTechnicianId(data.assignedTechnicianId || ''); setBudget({ partsCost: data.partsCost || '', laborCost: data.laborCost || '', otherCharges: data.otherCharges || '', finalCost: data.finalCost || '', budgetStatus: data.budgetStatus || 'PENDING' }); setDiagnosis({ diagnosis: data.diagnosis || '', probableCause: data.probableCause || '', testChecklist: data.testChecklist || {} }); setOrderEdit({ reportedIssue: data.reportedIssue || '', priority: data.priority || 'NORMAL', estimatedDeliveryAt: data.estimatedDeliveryAt ? data.estimatedDeliveryAt.slice(0, 16) : '', device: { category: data.device.category, brand: data.device.brand || '', model: data.device.model || '', serialNumber: data.device.serialNumber || '', imei: data.device.imei || '', color: data.device.color || '' } }); }).catch(() => setMessage({ type: 'error', text: 'No se pudo cargar la orden.' })).finally(() => setLoading(false));
 
@@ -139,7 +152,17 @@ export default function ServiceOrderDetail() {
 
   const deliver = () => {
     setDelivering(true);
-    api.deliverServiceOrder(orderId).then(() => { setMessage({ type: 'success', text: 'Orden entregada y cerrada correctamente.' }); return loadOrder(); }).catch(() => setMessage({ type: 'error', text: 'La orden debe estar lista para entrega.' })).finally(() => setDelivering(false));
+    api.deliverServiceOrder(orderId, { note: deliverForm.note || undefined, warrantyDays: deliverForm.warrantyDays === '' ? undefined : Number(deliverForm.warrantyDays) })
+      .then(() => { setDeliverDialogOpen(false); setMessage({ type: 'success', text: 'Orden entregada y cerrada correctamente.' }); return loadOrder(); })
+      .catch(() => setMessage({ type: 'error', text: 'La orden debe estar lista para entrega.' }))
+      .finally(() => setDelivering(false));
+  };
+
+  const openWarrantyClaim = () => {
+    setCreatingClaim(true);
+    api.createWarrantyClaim(orderId, claimForm)
+      .then((claim) => navigate(`/service-orders/${claim.folio}`))
+      .catch(() => { setMessage({ type: 'error', text: 'No se pudo abrir el reclamo de garantía.' }); setCreatingClaim(false); });
   };
 
   const trackingUrl = `${window.location.origin}/tracking/${order?.publicTrackingToken || ''}`;
@@ -152,11 +175,13 @@ export default function ServiceOrderDetail() {
   const balance = Math.max(0, Number(order.finalCost || order.estimatedCost || 0) - totalPaid);
   const photos = order.attachments?.filter((item) => item.category === 'PHOTO') || [];
   const documents = order.attachments?.filter((item) => item.category === 'DOCUMENT') || [];
+  const warrantyActive = Boolean(order.warrantyExpiresAt && new Date(order.warrantyExpiresAt) >= new Date());
+  const showWarrantyCard = order.status === 'ENTREGADO' || Boolean(order.warrantyForOrder) || order.warrantyClaims?.length > 0;
 
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Button component={Link} to="/service-orders" startIcon={<ArrowBackRoundedIcon />}>Órdenes</Button><Typography color="text.secondary">/ {order.folio}</Typography></Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Orden {order.folio}</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Recibida el {new Date(order.receivedAt).toLocaleString('es-MX')}{order.estimatedDeliveryAt ? ` · Entrega estimada: ${new Date(order.estimatedDeliveryAt).toLocaleDateString('es-MX')}` : ''}</Typography></Box><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Chip label={statusLabel(order.status)} color="primary" /><Button variant="outlined" startIcon={<PictureAsPdfRoundedIcon />} onClick={() => generateOrderPdf(order)}>Descargar PDF</Button>{order.status === 'LISTO_ENTREGA' && <Button variant="contained" color="success" startIcon={<LocalShippingRoundedIcon />} onClick={deliver} disabled={delivering}>{delivering ? 'Cerrando...' : 'Marcar entregado'}</Button>}</Stack></Stack>
+      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Orden {order.folio}</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Recibida el {new Date(order.receivedAt).toLocaleString('es-MX')}{order.estimatedDeliveryAt ? ` · Entrega estimada: ${new Date(order.estimatedDeliveryAt).toLocaleDateString('es-MX')}` : ''}</Typography></Box><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Chip label={statusLabel(order.status)} color="primary" /><Button variant="outlined" startIcon={<PictureAsPdfRoundedIcon />} onClick={() => generateOrderPdf(order)}>Descargar PDF</Button>{order.status === 'LISTO_ENTREGA' && <Button variant="contained" color="success" startIcon={<LocalShippingRoundedIcon />} onClick={() => setDeliverDialogOpen(true)}>Marcar entregado</Button>}</Stack></Stack>
       {order.status !== 'CANCELADO' && order.status !== 'SIN_REPARACION' && (
         <MainCard content={false}>
           <Box sx={{ p: 2.5, overflowX: 'auto' }}>
@@ -262,6 +287,46 @@ export default function ServiceOrderDetail() {
             <MainCard title="Seguimiento para el cliente">
               <Stack spacing={1.5}><Typography variant="body2" color="text.secondary">Comparte este enlace para que el cliente consulte el estado sin iniciar sesión.</Typography><TextField fullWidth size="small" value={trackingUrl} InputProps={{ readOnly: true }} /><Stack direction="row" spacing={1}><Button variant="outlined" startIcon={<ContentCopyRoundedIcon />} onClick={copyTracking}>{trackingCopied ? 'Copiado' : 'Copiar enlace'}</Button><Button component="a" href={trackingUrl} target="_blank" rel="noreferrer" variant="outlined" startIcon={<OpenInNewRoundedIcon />}>Abrir</Button></Stack></Stack>
             </MainCard>
+            {showWarrantyCard && (
+              <MainCard title="Garantía">
+                <Stack spacing={2}>
+                  {order.warrantyForOrder && (
+                    <Alert severity="info">Este es un reclamo de garantía de la orden <Typography component={Link} to={`/service-orders/${order.warrantyForOrder.folio}`} sx={{ fontWeight: 600 }}>{order.warrantyForOrder.folio}</Typography>.</Alert>
+                  )}
+                  {order.status === 'ENTREGADO' && (
+                    order.warrantyExpiresAt ? (
+                      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                        {warrantyActive ? <GppGoodRoundedIcon color="success" /> : <GppBadRoundedIcon color="disabled" />}
+                        <Box>
+                          <Typography fontWeight={600}>{warrantyActive ? 'Garantía vigente' : 'Garantía vencida'}</Typography>
+                          <Typography variant="body2" color="text.secondary">{order.warrantyDays} días · hasta {new Date(order.warrantyExpiresAt).toLocaleDateString('es-MX')}</Typography>
+                        </Box>
+                      </Stack>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">Esta orden no tiene garantía registrada.</Typography>
+                    )
+                  )}
+                  {warrantyActive && !isTechnician && (
+                    <Button variant="outlined" startIcon={<AssignmentReturnRoundedIcon />} onClick={() => { setClaimForm({ reportedIssue: order.reportedIssue, priority: order.priority }); setClaimDialogOpen(true); }} sx={{ alignSelf: 'flex-start' }}>
+                      Abrir reclamo de garantía
+                    </Button>
+                  )}
+                  {order.warrantyClaims?.length > 0 && (
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Reclamos de garantía</Typography>
+                      <Stack spacing={1}>
+                        {order.warrantyClaims.map((claim) => (
+                          <Stack direction="row" key={claim.folio} spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Typography component={Link} to={`/service-orders/${claim.folio}`} variant="body2" sx={{ fontWeight: 600 }}>{claim.folio}</Typography>
+                            <Chip label={statusLabel(claim.status)} size="small" variant="outlined" />
+                          </Stack>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                </Stack>
+              </MainCard>
+            )}
             <MainCard title="Historial de estados">
               <Stack spacing={2}>{order.statusHistory.map((event, index) => <Stack direction="row" spacing={1.5} key={event.id}><CheckCircleRoundedIcon color={index === order.statusHistory.length - 1 ? 'primary' : 'disabled'} fontSize="small" /><Box><Typography fontWeight={600}>{statusLabel(event.newStatus)}</Typography><Typography variant="body2" color="text.secondary">{event.note || 'Sin comentario'} · {new Date(event.createdAt).toLocaleString('es-MX')}</Typography></Box></Stack>)}</Stack>
             </MainCard>
@@ -285,6 +350,39 @@ export default function ServiceOrderDetail() {
           </Stack>
         </Grid>
       </Grid>
+
+      <Dialog open={deliverDialogOpen} onClose={() => setDeliverDialogOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>Marcar orden como entregada</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <TextField fullWidth type="number" label="Días de garantía" value={deliverForm.warrantyDays} onChange={(event) => setDeliverForm({ ...deliverForm, warrantyDays: event.target.value })} inputProps={{ min: 0 }} helperText="Déjalo vacío si el equipo no lleva garantía" />
+            <TextField fullWidth multiline minRows={2} label="Nota de entrega (opcional)" value={deliverForm.note} onChange={(event) => setDeliverForm({ ...deliverForm, note: event.target.value })} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeliverDialogOpen(false)}>Cancelar</Button>
+          <Button variant="contained" color="success" onClick={deliver} disabled={delivering}>{delivering ? 'Cerrando...' : 'Confirmar entrega'}</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={claimDialogOpen} onClose={() => setClaimDialogOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>Abrir reclamo de garantía</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Typography variant="body2" color="text.secondary">Se creará una nueva orden para el mismo cliente y equipo, vinculada a {order.folio}.</Typography>
+            <TextField required fullWidth multiline minRows={3} label="Falla reportada" value={claimForm.reportedIssue} onChange={(event) => setClaimForm({ ...claimForm, reportedIssue: event.target.value })} />
+            <TextField select fullWidth label="Prioridad" value={claimForm.priority} onChange={(event) => setClaimForm({ ...claimForm, priority: event.target.value })}>
+              <MenuItem value="NORMAL">Normal</MenuItem>
+              <MenuItem value="ALTA">Alta</MenuItem>
+              <MenuItem value="URGENTE">Urgente</MenuItem>
+            </TextField>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setClaimDialogOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={openWarrantyClaim} disabled={creatingClaim || !claimForm.reportedIssue}>{creatingClaim ? 'Creando...' : 'Crear orden de garantía'}</Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }
