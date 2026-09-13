@@ -299,4 +299,28 @@ describe('Electrónica Tech API (e2e)', () => {
     const publicView = await request(app.getHttpServer()).get(`/api/public/tracking/${delivered.body.publicTrackingToken}`).expect(200);
     expect(publicView.body.warrantyDays).toBe(30);
   });
+
+  it('searches across customers, service orders and inventory', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+    const name = `Zzz Buscable ${suffix}`;
+
+    const customer = await request(app.getHttpServer()).post('/api/customers').set('Authorization', `Bearer ${token}`).send({ name, phone: `563${suffix}`, email: `e2e-search-${suffix}@test.local` }).expect(201);
+    const order = await request(app.getHttpServer()).post('/api/service-orders').set('Authorization', `Bearer ${token}`).send({ customerId: customer.body.id, category: 'CELULAR', brand: 'Test', model: 'E2E Search', reportedIssue: 'No enciende', priority: 'NORMAL' }).expect(201);
+    const item = await request(app.getHttpServer()).post('/api/inventory').set('Authorization', `Bearer ${token}`).send({ name: `Pieza ${name}`, sku: `SRCH-${suffix}`, category: 'Test', cost: 10, salePrice: 25, stock: 1, minimumStock: 0 }).expect(201);
+
+    const empty = await request(app.getHttpServer()).get('/api/search?q=z').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(empty.body).toEqual({ customers: [], serviceOrders: [], inventory: [] });
+
+    const byCustomerName = await request(app.getHttpServer()).get(`/api/search?q=${encodeURIComponent(name)}`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(byCustomerName.body.customers.some((c: { id: string }) => c.id === customer.body.id)).toBe(true);
+    expect(byCustomerName.body.serviceOrders.some((o: { folio: string }) => o.folio === order.body.folio)).toBe(true);
+    expect(byCustomerName.body.inventory.some((i: { id: string }) => i.id === item.body.id)).toBe(true);
+
+    const byFolio = await request(app.getHttpServer()).get(`/api/search?q=${order.body.folio}`).set('Authorization', `Bearer ${token}`).expect(200);
+    expect(byFolio.body.serviceOrders.some((o: { folio: string }) => o.folio === order.body.folio)).toBe(true);
+
+    await request(app.getHttpServer()).get('/api/search').expect(401);
+  });
 });

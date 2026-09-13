@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
@@ -94,7 +95,8 @@ function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemov
 export default function Inventory() {
   const isTechnician = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role === 'TECHNICIAN';
   const [items, setItems] = useState([]);
-  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get('q') || '');
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -108,7 +110,7 @@ export default function Inventory() {
   const load = (search) => api.listInventory(search).then((records) => { setItems(records); setError(''); }).catch(() => setError('No se pudo conectar con la API. Mostrando inventario de ejemplo.')).finally(() => setLoading(false));
 
   const isFirstRender = useRef(true);
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(query); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { api.listSuppliers().then(setSuppliers).catch(() => {}); }, []);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
