@@ -131,14 +131,19 @@ export default function Finance() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <MainCard content={false} sx={{ height: '100%' }} component={Link} to="#movimientos">
+              <MainCard content={false} sx={{ height: '100%' }}>
                 <Stack spacing={1} sx={{ p: 2.5, alignItems: 'flex-start', justifyContent: 'center', height: '100%' }}>
                   <Typography variant="body2" color="text.secondary">Estado del periodo</Typography>
                   <Chip
                     icon={summary.isProfit ? <ArrowUpwardRoundedIcon /> : <ArrowDownwardRoundedIcon />}
                     label={summary.isProfit ? 'Números verdes · Ganancia' : 'Números rojos · Pérdida'}
                     color={summary.isProfit ? 'success' : 'error'}
-                    sx={{ fontWeight: 600 }}
+                    sx={{
+                      fontWeight: 600,
+                      maxWidth: '100%',
+                      height: 'auto',
+                      '& .MuiChip-label': { whiteSpace: 'normal', display: 'block', py: 0.75 }
+                    }}
                   />
                 </Stack>
               </MainCard>
