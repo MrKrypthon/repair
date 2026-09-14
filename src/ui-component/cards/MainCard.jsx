@@ -37,9 +37,7 @@ export default function MainCard({
       sx={(theme) => ({
         border: border ? '1px solid' : 'none',
         borderColor: 'divider',
-        ':hover': {
-          boxShadow: boxShadow ? shadow || defaultShadow : 'inherit'
-        },
+        ...(boxShadow && { ':hover': { boxShadow: shadow || defaultShadow } }),
         ...(typeof sx === 'function' ? sx(theme) : sx || {})
       })}
     >
