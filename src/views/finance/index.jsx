@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import ReactApexChart from 'react-apexcharts';
 
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
@@ -38,16 +38,16 @@ function periodRange(period) {
   return {};
 }
 
-function SummaryCard({ icon: Icon, label, value, color, bg, detail }) {
+function SummaryCard({ icon: Icon, label, value, color, bg, detail, to }) {
   return (
-    <MainCard content={false} sx={{ height: '100%' }}>
+    <MainCard content={false} sx={{ height: '100%' }} {...(to ? { component: Link, to } : {})}>
       <Stack direction="row" spacing={2} sx={{ p: 2.5, alignItems: 'center' }}>
         <Avatar variant="rounded" sx={{ bgcolor: bg, color, width: 48, height: 48 }}>
           <Icon />
         </Avatar>
         <Box>
           <Typography variant="body2" color="text.secondary">{label}</Typography>
-          <Typography variant="h2" sx={{ my: 0.5 }}>{value}</Typography>
+          <Typography variant="h2" sx={{ my: 0.5, color: 'text.primary' }}>{value}</Typography>
           {detail && <Typography variant="caption" color={color}>{detail}</Typography>}
         </Box>
       </Stack>
@@ -114,10 +114,10 @@ export default function Finance() {
         <>
           <Grid container spacing={gridSpacing}>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <SummaryCard icon={PaymentsRoundedIcon} label="Ingresos" value={money(summary.income)} color="success.dark" bg="success.lighter" />
+              <SummaryCard icon={PaymentsRoundedIcon} label="Ingresos" value={money(summary.income)} color="success.dark" bg="success.lighter" to="#movimientos" />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <SummaryCard icon={ShoppingCartRoundedIcon} label="Gastos (piezas / proveedores)" value={money(summary.expenses)} color="error.main" bg="error.lighter" />
+              <SummaryCard icon={ShoppingCartRoundedIcon} label="Gastos (piezas / proveedores)" value={money(summary.expenses)} color="error.main" bg="error.lighter" to="/purchase-orders" />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
               <SummaryCard
@@ -127,10 +127,11 @@ export default function Finance() {
                 color={summary.isProfit ? 'success.dark' : 'error.main'}
                 bg={summary.isProfit ? 'success.lighter' : 'error.lighter'}
                 detail={`Margen ${summary.margin.toFixed(1)}%`}
+                to="#movimientos"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <MainCard content={false} sx={{ height: '100%' }}>
+              <MainCard content={false} sx={{ height: '100%' }} component={Link} to="#movimientos">
                 <Stack spacing={1} sx={{ p: 2.5, alignItems: 'flex-start', justifyContent: 'center', height: '100%' }}>
                   <Typography variant="body2" color="text.secondary">Estado del periodo</Typography>
                   <Chip
@@ -148,7 +149,7 @@ export default function Finance() {
             <ReactApexChart options={chartOptions} series={chartSeries} type="bar" height={300} />
           </MainCard>
 
-          <MainCard title="Movimientos">
+          <MainCard id="movimientos" title="Movimientos">
             {summary.movements.length === 0 ? (
               <Typography color="text.secondary" align="center" sx={{ py: 4 }}>No hay movimientos en este periodo.</Typography>
             ) : (
