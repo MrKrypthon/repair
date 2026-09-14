@@ -2,19 +2,23 @@
 
 export default function Button(theme) {
   return {
-    MuiSlider: {
+    MuiButton: {
       styleOverrides: {
         root: {
-          '&.Mui-disabled': {
-            color: theme.vars.palette.grey[300]
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+          '&:not(.Mui-disabled):hover': {
+            transform: 'translateY(-2px)'
           }
         },
-        mark: {
-          backgroundColor: theme.vars.palette.background.paper,
-          width: '4px'
+        contained: {
+          '&:not(.Mui-disabled):hover': {
+            boxShadow: theme.vars.customShadows.z8
+          }
         },
-        valueLabel: {
-          color: theme.vars.palette.primary.light
+        outlined: {
+          '&:not(.Mui-disabled):hover': {
+            boxShadow: theme.vars.customShadows.z1
+          }
         }
       }
     }

@@ -63,11 +63,7 @@ function MetricCard({ metric }) {
   const Icon = metric.icon;
 
   return (
-    <MainCard
-      content={false}
-      sx={{ height: '100%', ...(metric.to && { cursor: 'pointer', textDecoration: 'none', color: 'inherit', transition: 'box-shadow .2s, transform .2s', '&:hover': { boxShadow: 4, transform: 'translateY(-2px)' } }) }}
-      {...(metric.to ? { component: Link, to: metric.to } : {})}
-    >
+    <MainCard content={false} sx={{ height: '100%' }} {...(metric.to ? { component: Link, to: metric.to } : {})}>
       <Stack direction="row" spacing={2} sx={{ p: 2.5, alignItems: 'center' }}>
         <Avatar variant="rounded" sx={{ bgcolor: metric.bg, color: metric.color, width: 48, height: 48 }}>
           <Icon />

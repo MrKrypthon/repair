@@ -16,6 +16,7 @@ import Divider from './Divider';
 import DateTimePickerToolbar from './DateTimePickerToolbar';
 import Dialog from './Dialog';
 import DialogTitle from './DialogTitle';
+import IconButton from './IconButton';
 import InputBase from './InputBase';
 import ListItemButton from './ListItemButton';
 import ListItemIcon from './ListItemIcon';
@@ -45,6 +46,7 @@ export default function ComponentsOverrides(theme, borderRadius, outlinedFilled)
     Dialog(),
     DialogTitle(),
     Divider(theme),
+    IconButton(),
     InputBase(theme),
     ListItemButton(theme),
     ListItemIcon(theme),
