@@ -36,6 +36,10 @@ const orders = [
 
 const NOT_OVERDUE_STATUSES = ['ENTREGADO', 'CANCELADO', 'SIN_REPARACION'];
 
+const statusLabels = {
+  RECIBIDO: 'Recibido', ESPERA_DIAGNOSTICO: 'En espera de diagnóstico', EN_DIAGNOSTICO: 'En diagnóstico', ESPERA_AUTORIZACION: 'Esperando autorización', ESPERA_PIEZA: 'Esperando pieza', EN_REPARACION: 'En reparación', EN_PRUEBAS: 'En pruebas', LISTO_ENTREGA: 'Listo para entrega', ENTREGADO: 'Entregado', CANCELADO: 'Cancelado', SIN_REPARACION: 'Sin reparación'
+};
+
 export default function ServiceOrders() {
   const [searchParams] = useSearchParams();
   const [records, setRecords] = useState([]);
@@ -45,6 +49,7 @@ export default function ServiceOrders() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [priorityFilter, setPriorityFilter] = useState('ALL');
   const [overdueOnly, setOverdueOnly] = useState(searchParams.get('overdue') === '1');
+  const [presetStatuses, setPresetStatuses] = useState(() => searchParams.get('status')?.split(',') || null);
 
   useEffect(() => {
     api.listServiceOrders().then(setRecords).catch(() => setError('No se pudo conectar con la API. Mostrando datos de ejemplo.')).finally(() => setLoading(false));
@@ -52,6 +57,7 @@ export default function ServiceOrders() {
 
   const source = records.length ? records.map((order) => ({
     ...order,
+    rawStatus: order.status,
     customer: order.customer.name,
     device: `${order.device.brand} ${order.device.model}`,
     issue: order.reportedIssue,
@@ -61,7 +67,7 @@ export default function ServiceOrders() {
     received: new Date(order.receivedAt).toLocaleDateString('es-MX'),
     overdue: Boolean(order.estimatedDeliveryAt) && new Date(order.estimatedDeliveryAt) < new Date() && !NOT_OVERDUE_STATUSES.includes(order.status)
   })) : orders;
-  const filteredOrders = source.filter((order) => `${order.folio} ${order.customer} ${order.device} ${order.issue}`.toLowerCase().includes(query.toLowerCase()) && (statusFilter === 'ALL' || order.status.toLowerCase() === statusFilter.replaceAll('_', ' ').toLowerCase()) && (priorityFilter === 'ALL' || order.priority.toUpperCase() === priorityFilter) && (!overdueOnly || order.overdue));
+  const filteredOrders = source.filter((order) => `${order.folio} ${order.customer} ${order.device} ${order.issue}`.toLowerCase().includes(query.toLowerCase()) && (statusFilter === 'ALL' || order.status.toLowerCase() === statusFilter.replaceAll('_', ' ').toLowerCase()) && (priorityFilter === 'ALL' || order.priority.toUpperCase() === priorityFilter) && (!overdueOnly || order.overdue) && (!presetStatuses || presetStatuses.includes(order.rawStatus)));
   const exportCsv = () => {
     const header = ['Folio', 'Cliente', 'Equipo', 'Falla', 'Estado', 'Prioridad', 'Recepción'];
     const rows = filteredOrders.map((order) => [order.folio, order.customer, order.device, order.issue, order.status, order.priority, order.received]);
@@ -82,7 +88,12 @@ export default function ServiceOrders() {
       </Stack>
       <MainCard content={false}>
         {error && <Alert severity="warning" sx={{ m: 2.5, mb: 0 }}>{error}</Alert>}
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ p: 2.5, justifyContent: 'space-between', alignItems: { md: 'center' } }}><Typography variant="h4">Todas las órdenes <Typography component="span" color="text.secondary" variant="body2">({filteredOrders.length})</Typography></Typography><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ width: { xs: '100%', md: 'auto' } }}><TextField size="small" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar orden, cliente o equipo" sx={{ minWidth: { sm: 250 } }} InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" /></InputAdornment> }} /><TextField select size="small" label="Estado" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} sx={{ minWidth: 170 }}><MenuItem value="ALL">Todos</MenuItem><MenuItem value="EN_REPARACION">En reparación</MenuItem><MenuItem value="EN_DIAGNOSTICO">En diagnóstico</MenuItem><MenuItem value="ESPERA_PIEZA">Esperando pieza</MenuItem><MenuItem value="LISTO_ENTREGA">Listo para entrega</MenuItem></TextField><TextField select size="small" label="Prioridad" value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)} sx={{ minWidth: 120 }}><MenuItem value="ALL">Todas</MenuItem><MenuItem value="ALTA">Alta</MenuItem><MenuItem value="NORMAL">Normal</MenuItem></TextField><ToggleButton size="small" value="overdue" selected={overdueOnly} onChange={() => setOverdueOnly((current) => !current)} color="error"><WarningAmberRoundedIcon fontSize="small" sx={{ mr: 0.5 }} />Atrasadas</ToggleButton><Button size="small" startIcon={<FilterListRoundedIcon />} onClick={() => { setQuery(''); setStatusFilter('ALL'); setPriorityFilter('ALL'); setOverdueOnly(false); }}>Limpiar</Button></Stack></Stack>
+        {presetStatuses && (
+          <Alert severity="info" sx={{ m: 2.5, mb: 0 }} onClose={() => setPresetStatuses(null)} icon={false}>
+            Mostrando solo: {presetStatuses.map((code) => statusLabels[code] || code).join(', ')}
+          </Alert>
+        )}
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ p: 2.5, justifyContent: 'space-between', alignItems: { md: 'center' } }}><Typography variant="h4">Todas las órdenes <Typography component="span" color="text.secondary" variant="body2">({filteredOrders.length})</Typography></Typography><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ width: { xs: '100%', md: 'auto' } }}><TextField size="small" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar orden, cliente o equipo" sx={{ minWidth: { sm: 250 } }} InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" /></InputAdornment> }} /><TextField select size="small" label="Estado" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} sx={{ minWidth: 170 }}><MenuItem value="ALL">Todos</MenuItem><MenuItem value="EN_REPARACION">En reparación</MenuItem><MenuItem value="EN_DIAGNOSTICO">En diagnóstico</MenuItem><MenuItem value="ESPERA_PIEZA">Esperando pieza</MenuItem><MenuItem value="LISTO_ENTREGA">Listo para entrega</MenuItem></TextField><TextField select size="small" label="Prioridad" value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)} sx={{ minWidth: 120 }}><MenuItem value="ALL">Todas</MenuItem><MenuItem value="ALTA">Alta</MenuItem><MenuItem value="NORMAL">Normal</MenuItem></TextField><ToggleButton size="small" value="overdue" selected={overdueOnly} onChange={() => setOverdueOnly((current) => !current)} color="error"><WarningAmberRoundedIcon fontSize="small" sx={{ mr: 0.5 }} />Atrasadas</ToggleButton><Button size="small" startIcon={<FilterListRoundedIcon />} onClick={() => { setQuery(''); setStatusFilter('ALL'); setPriorityFilter('ALL'); setOverdueOnly(false); setPresetStatuses(null); }}>Limpiar</Button></Stack></Stack>
         <Box sx={{ overflowX: 'auto' }}>
           <Table sx={{ minWidth: 820 }}>
             <TableHead><TableRow><TableCell>Folio</TableCell><TableCell>Cliente / equipo</TableCell><TableCell>Falla reportada</TableCell><TableCell>Estado</TableCell><TableCell>Prioridad</TableCell><TableCell>Recepción</TableCell></TableRow></TableHead>

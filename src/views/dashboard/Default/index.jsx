@@ -37,12 +37,16 @@ const orders = [
   { folio: 'OS-1045', device: 'Nintendo Switch · HDMI', customer: 'Diego Herrera', status: 'Listo para entrega', tone: 'success', date: 'Ayer, 11:20' }
 ];
 
-const metrics = [
-  { label: 'En reparación', value: '18', detail: '+3 esta semana', icon: BuildRoundedIcon, color: 'primary.main', bg: 'primary.lighter' },
-  { label: 'Listos para entregar', value: '7', detail: '2 desde ayer', icon: CheckCircleRoundedIcon, color: 'success.dark', bg: 'success.lighter' },
-  { label: 'Cobros pendientes', value: '$18,450', detail: '5 órdenes', icon: PaymentsRoundedIcon, color: 'warning.dark', bg: 'warning.lighter' },
-  { label: 'Órdenes atrasadas', value: '3', detail: 'Requieren atención', icon: WarningAmberRoundedIcon, color: 'error.main', bg: 'error.lighter' }
-];
+const IN_REPAIR_STATUSES = 'EN_REPARACION,EN_PRUEBAS,EN_DIAGNOSTICO';
+
+function buildFallbackMetrics(isAdmin) {
+  return [
+    { label: 'En reparación', value: '18', detail: '+3 esta semana', icon: BuildRoundedIcon, color: 'primary.main', bg: 'primary.lighter', to: `/service-orders?status=${IN_REPAIR_STATUSES}` },
+    { label: 'Listos para entregar', value: '7', detail: '2 desde ayer', icon: CheckCircleRoundedIcon, color: 'success.dark', bg: 'success.lighter', to: '/service-orders?status=LISTO_ENTREGA' },
+    { label: 'Cobros pendientes', value: '$18,450', detail: '5 órdenes', icon: PaymentsRoundedIcon, color: 'warning.dark', bg: 'warning.lighter', to: isAdmin ? '/finance' : undefined },
+    { label: 'Órdenes atrasadas', value: '3', detail: 'Requieren atención', icon: WarningAmberRoundedIcon, color: 'error.main', bg: 'error.lighter', to: '/service-orders?overdue=1' }
+  ];
+}
 
 const categoryLabels = { CELULAR: 'celular', TABLET: 'tablet', LAPTOP: 'laptop', CONSOLA: 'consola', TARJETA_ELECTRONICA: 'tarjeta electrónica', OTRO: 'otro' };
 
@@ -59,14 +63,18 @@ function MetricCard({ metric }) {
   const Icon = metric.icon;
 
   return (
-    <MainCard content={false} sx={{ height: '100%' }}>
+    <MainCard
+      content={false}
+      sx={{ height: '100%', ...(metric.to && { cursor: 'pointer', textDecoration: 'none', color: 'inherit', transition: 'box-shadow .2s, transform .2s', '&:hover': { boxShadow: 4, transform: 'translateY(-2px)' } }) }}
+      {...(metric.to ? { component: Link, to: metric.to } : {})}
+    >
       <Stack direction="row" spacing={2} sx={{ p: 2.5, alignItems: 'center' }}>
         <Avatar variant="rounded" sx={{ bgcolor: metric.bg, color: metric.color, width: 48, height: 48 }}>
           <Icon />
         </Avatar>
         <Box>
           <Typography variant="body2" color="text.secondary">{metric.label}</Typography>
-          <Typography variant="h2" sx={{ my: 0.5 }}>{metric.value}</Typography>
+          <Typography variant="h2" sx={{ my: 0.5, color: 'text.primary' }}>{metric.value}</Typography>
           <Typography variant="caption" color={metric.color}>{metric.detail}</Typography>
         </Box>
       </Stack>
@@ -95,7 +103,9 @@ function WorkshopCharts({ dashboard }) {
 }
 
 export default function Dashboard() {
-  const isTechnician = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role === 'TECHNICIAN';
+  const role = JSON.parse(localStorage.getItem('fixtrack-user') || '{}').role;
+  const isTechnician = role === 'TECHNICIAN';
+  const isAdmin = role === 'ADMIN';
   const [dashboard, setDashboard] = useState(null);
   const [recentOrders, setRecentOrders] = useState(orders);
   const [error, setError] = useState('');
@@ -107,12 +117,12 @@ export default function Dashboard() {
 
   if (isTechnician) return <Navigate to="/service-orders" replace />;
   const currentMetrics = dashboard ? [
-    { label: 'En reparación', value: dashboard.inRepair, detail: `${dashboard.receivedToday} recibidas hoy`, icon: BuildRoundedIcon, color: 'primary.main', bg: 'primary.lighter' },
-    { label: 'Listos para entregar', value: dashboard.ready, detail: `${dashboard.pendingAuthorization} presupuestos pendientes`, icon: CheckCircleRoundedIcon, color: 'success.dark', bg: 'success.lighter' },
-    { label: 'Cobros registrados', value: `$${Number(dashboard.totalCollected).toLocaleString('es-MX')}`, detail: `${dashboard.customers} clientes`, icon: PaymentsRoundedIcon, color: 'warning.dark', bg: 'warning.lighter' },
-    { label: 'Ganancia estimada', value: `$${Number(dashboard.estimatedProfit).toLocaleString('es-MX')}`, detail: `Margen ${Number(dashboard.margin).toFixed(1)}%`, icon: PaymentsRoundedIcon, color: 'success.dark', bg: 'success.lighter' },
-    { label: 'Órdenes atrasadas', value: dashboard.overdue, detail: `${dashboard.lowStock} productos con stock bajo`, icon: WarningAmberRoundedIcon, color: 'error.main', bg: 'error.lighter' }
-  ] : metrics;
+    { label: 'En reparación', value: dashboard.inRepair, detail: `${dashboard.receivedToday} recibidas hoy`, icon: BuildRoundedIcon, color: 'primary.main', bg: 'primary.lighter', to: `/service-orders?status=${IN_REPAIR_STATUSES}` },
+    { label: 'Listos para entregar', value: dashboard.ready, detail: `${dashboard.pendingAuthorization} presupuestos pendientes`, icon: CheckCircleRoundedIcon, color: 'success.dark', bg: 'success.lighter', to: '/service-orders?status=LISTO_ENTREGA' },
+    { label: 'Cobros registrados', value: `$${Number(dashboard.totalCollected).toLocaleString('es-MX')}`, detail: `${dashboard.customers} clientes`, icon: PaymentsRoundedIcon, color: 'warning.dark', bg: 'warning.lighter', to: isAdmin ? '/finance' : undefined },
+    { label: 'Ganancia estimada', value: `$${Number(dashboard.estimatedProfit).toLocaleString('es-MX')}`, detail: `Margen ${Number(dashboard.margin).toFixed(1)}%`, icon: PaymentsRoundedIcon, color: 'success.dark', bg: 'success.lighter', to: isAdmin ? '/finance' : undefined },
+    { label: 'Órdenes atrasadas', value: dashboard.overdue, detail: `${dashboard.lowStock} productos con stock bajo`, icon: WarningAmberRoundedIcon, color: 'error.main', bg: 'error.lighter', to: '/service-orders?overdue=1' }
+  ] : buildFallbackMetrics(isAdmin);
 
   const todayReception = dashboard?.todayReception || { total: 0, byCategory: {} };
   const todayReceptionDetail = Object.entries(todayReception.byCategory)
