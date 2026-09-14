@@ -9,16 +9,16 @@ export default function CardOverride(theme) {
             cursor: 'pointer',
             textDecoration: 'none',
             color: 'inherit',
-            overflow: 'visible',
-            transition: 'transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease'
+            border: '3px solid transparent',
+            transition: 'transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease'
           },
           '&[href]:hover': {
-            transform: 'translateY(-4px)',
-            backgroundColor: theme.vars.palette.action.hover,
-            boxShadow: theme.vars.customShadows.z16
+            transform: 'translateY(-6px)',
+            borderColor: theme.vars.palette.primary.main,
+            backgroundColor: theme.vars.palette.action.hover
           },
           '&[href]:active': {
-            transform: 'translateY(0) scale(0.98)',
+            transform: 'translateY(-2px)',
             transition: 'transform 0.08s ease'
           }
         }
