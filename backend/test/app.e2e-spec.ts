@@ -115,7 +115,10 @@ describe('Electrónica Tech API (e2e)', () => {
 
     // el técnico no puede ver el dashboard financiero
     await request(app.getHttpServer()).get('/api/analytics/dashboard').set('Authorization', `Bearer ${techToken}`).expect(403);
-    await request(app.getHttpServer()).get('/api/analytics/dashboard').set('Authorization', `Bearer ${adminToken}`).expect(200);
+    const dashboard = await request(app.getHttpServer()).get('/api/analytics/dashboard').set('Authorization', `Bearer ${adminToken}`).expect(200);
+    expect(dashboard.body.weeklyVolume).toHaveLength(7);
+    expect(dashboard.body.statusBreakdown).toEqual(expect.objectContaining({ inDiagnosis: expect.any(Number), inRepair: expect.any(Number), pendingAuthorization: expect.any(Number), ready: expect.any(Number) }));
+    expect(dashboard.body.todayReception).toEqual(expect.objectContaining({ total: expect.any(Number), byCategory: expect.any(Object) }));
   });
 
   it('supports product images and search in inventory', async () => {

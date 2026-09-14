@@ -8,6 +8,7 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import DevicesOtherRoundedIcon from '@mui/icons-material/DevicesOtherRounded';
+import ListAltRoundedIcon from '@mui/icons-material/ListAltRounded';
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import Avatar from '@mui/material/Avatar';
@@ -43,6 +44,13 @@ const metrics = [
   { label: 'Órdenes atrasadas', value: '3', detail: 'Requieren atención', icon: WarningAmberRoundedIcon, color: 'error.main', bg: 'error.lighter' }
 ];
 
+const categoryLabels = { CELULAR: 'celular', TABLET: 'tablet', LAPTOP: 'laptop', CONSOLA: 'consola', TARJETA_ELECTRONICA: 'tarjeta electrónica', OTRO: 'otro' };
+
+function formatTodayLabel() {
+  const label = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 const statusPresentation = {
   RECIBIDO: ['Recibido', 'default'], ESPERA_DIAGNOSTICO: ['En espera de diagnóstico', 'info'], EN_DIAGNOSTICO: ['En diagnóstico', 'info'], ESPERA_AUTORIZACION: ['Esperando autorización', 'secondary'], ESPERA_PIEZA: ['Esperando pieza', 'warning'], EN_REPARACION: ['En reparación', 'primary'], EN_PRUEBAS: ['En pruebas', 'primary'], LISTO_ENTREGA: ['Listo para entrega', 'success'], ENTREGADO: ['Entregado', 'success'], CANCELADO: ['Cancelado', 'error'], SIN_REPARACION: ['Sin reparación', 'error']
 };
@@ -74,11 +82,14 @@ function WorkshopCharts({ dashboard }) {
   const textMuted = theme.palette.text.secondary;
   const gridColor = theme.palette.divider;
 
+  const weeklyVolume = dashboard?.weeklyVolume || [];
+  const statusBreakdown = dashboard?.statusBreakdown || { inRepair: 0, inDiagnosis: 0, pendingAuthorization: 0, ready: 0 };
+
   const common = { chart: { toolbar: { show: false }, fontFamily: theme.typography.fontFamily }, dataLabels: { enabled: false }, grid: { borderColor: gridColor, strokeDashArray: 4 }, xaxis: { labels: { style: { colors: textMuted } }, axisBorder: { show: false }, axisTicks: { show: false } }, yaxis: { labels: { style: { colors: textMuted } } }, tooltip: { theme: theme.palette.mode } };
-  const volumeOptions = { ...common, chart: { ...common.chart, type: 'area' }, colors: [primary, secondary], stroke: { curve: 'smooth', width: 3 }, fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.02 } }, xaxis: { ...common.xaxis, categories: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] } };
-  const volumeSeries = [{ name: 'Recibidas', data: [4, 6, 5, 8, 7, 9, dashboard?.receivedToday || 4] }, { name: 'Entregadas', data: [2, 3, 4, 3, 5, 4, dashboard?.ready || 2] }];
-  const statusOptions = { chart: { type: 'donut', fontFamily: theme.typography.fontFamily }, labels: ['En reparación', 'Diagnóstico', 'Esperando autorización', 'Listos'], colors: [primary, secondary, '#f59e0b', success], legend: { position: 'bottom', fontSize: '12px', labels: { colors: textMuted } }, dataLabels: { enabled: false }, stroke: { colors: [theme.palette.background.paper] }, plotOptions: { pie: { donut: { size: '72%', labels: { show: true, total: { show: true, label: 'Órdenes activas', color: textMuted, formatter: () => String((dashboard?.inRepair || 18) + (dashboard?.pendingAuthorization || 4) + (dashboard?.ready || 7)) } } } } } };
-  const statusSeries = [dashboard?.inRepair || 18, 8, dashboard?.pendingAuthorization || 4, dashboard?.ready || 7];
+  const volumeOptions = { ...common, chart: { ...common.chart, type: 'area' }, colors: [primary, secondary], stroke: { curve: 'smooth', width: 3 }, fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.02 } }, xaxis: { ...common.xaxis, categories: weeklyVolume.map((day) => day.label) } };
+  const volumeSeries = [{ name: 'Recibidas', data: weeklyVolume.map((day) => day.received) }, { name: 'Entregadas', data: weeklyVolume.map((day) => day.delivered) }];
+  const statusOptions = { chart: { type: 'donut', fontFamily: theme.typography.fontFamily }, labels: ['En reparación', 'Diagnóstico', 'Esperando autorización', 'Listos'], colors: [primary, secondary, '#f59e0b', success], legend: { position: 'bottom', fontSize: '12px', labels: { colors: textMuted } }, dataLabels: { enabled: false }, stroke: { colors: [theme.palette.background.paper] }, plotOptions: { pie: { donut: { size: '72%', labels: { show: true, total: { show: true, label: 'Órdenes activas', color: textMuted, formatter: () => String(statusBreakdown.inRepair + statusBreakdown.inDiagnosis + statusBreakdown.pendingAuthorization + statusBreakdown.ready) } } } } } };
+  const statusSeries = [statusBreakdown.inRepair, statusBreakdown.inDiagnosis, statusBreakdown.pendingAuthorization, statusBreakdown.ready];
 
   return <><Grid size={{ xs: 12, lg: 8 }}><MainCard title="Actividad del taller" secondary={<Chip label="Últimos 7 días" size="small" color="primary" variant="outlined" />}><ReactApexChart options={volumeOptions} series={volumeSeries} type="area" height={290} /></MainCard></Grid><Grid size={{ xs: 12, lg: 4 }}><MainCard title="Órdenes por estado"><ReactApexChart options={statusOptions} series={statusSeries} type="donut" height={290} /></MainCard></Grid></>;
 }
@@ -103,6 +114,11 @@ export default function Dashboard() {
     { label: 'Órdenes atrasadas', value: dashboard.overdue, detail: `${dashboard.lowStock} productos con stock bajo`, icon: WarningAmberRoundedIcon, color: 'error.main', bg: 'error.lighter' }
   ] : metrics;
 
+  const todayReception = dashboard?.todayReception || { total: 0, byCategory: {} };
+  const todayReceptionDetail = Object.entries(todayReception.byCategory)
+    .map(([category, count]) => `${count} ${categoryLabels[category] || category.toLowerCase()}${count > 1 ? 's' : ''}`)
+    .join(' · ') || 'Sin equipos recibidos todavía';
+
   return (
     <Grid container spacing={gridSpacing}>
       <Grid size={12}>
@@ -110,7 +126,7 @@ export default function Dashboard() {
         <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
           <Box>
             <Typography variant="h2">Resumen del taller</Typography>
-            <Typography color="text.secondary" sx={{ mt: 0.5 }}>Martes, 7 de septiembre de 2026 · Todo bajo control.</Typography>
+            <Typography color="text.secondary" sx={{ mt: 0.5 }}>{formatTodayLabel()}</Typography>
           </Box>
           <Button component={Link} to="/service-orders/new" variant="contained" startIcon={<AddRoundedIcon />} sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}>
             Nueva orden
@@ -162,13 +178,13 @@ export default function Dashboard() {
         <MainCard title="Acciones rápidas">
           <Stack spacing={1.25}>
             <Button component={Link} to="/customers/new" variant="outlined" startIcon={<DevicesOtherRoundedIcon />} fullWidth sx={{ justifyContent: 'flex-start', py: 1.25 }}>Registrar cliente y equipo</Button>
-            <Button component={Link} to="/service-orders" variant="outlined" startIcon={<AccessTimeRoundedIcon />} fullWidth sx={{ justifyContent: 'flex-start', py: 1.25 }}>Revisar órdenes atrasadas</Button>
-            <Button component={Link} to="/payments" variant="outlined" startIcon={<PaymentsRoundedIcon />} fullWidth sx={{ justifyContent: 'flex-start', py: 1.25 }}>Consultar cobros pendientes</Button>
+            <Button component={Link} to="/service-orders?overdue=1" variant="outlined" color={dashboard?.overdue ? 'error' : 'primary'} startIcon={<AccessTimeRoundedIcon />} fullWidth sx={{ justifyContent: 'flex-start', py: 1.25 }}>Revisar órdenes atrasadas{dashboard ? ` (${dashboard.overdue})` : ''}</Button>
+            <Button component={Link} to="/service-orders" variant="outlined" startIcon={<ListAltRoundedIcon />} fullWidth sx={{ justifyContent: 'flex-start', py: 1.25 }}>Ver todas las órdenes</Button>
           </Stack>
           <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: 'primary.lighter' }}>
             <Typography variant="subtitle1">Recepción del día</Typography>
-            <Typography variant="h3" sx={{ mt: 0.5 }}>4 equipos</Typography>
-            <Typography variant="body2" color="text.secondary">2 celulares · 1 laptop · 1 consola</Typography>
+            <Typography variant="h3" sx={{ mt: 0.5 }}>{todayReception.total} {todayReception.total === 1 ? 'equipo' : 'equipos'}</Typography>
+            <Typography variant="body2" color="text.secondary">{todayReceptionDetail}</Typography>
           </Box>
         </MainCard>
       </Grid>

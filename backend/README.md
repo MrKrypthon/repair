@@ -93,7 +93,7 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `PATCH /api/appointments/:id/status`: marca un evento como completado o cancelado.
 - `GET /api/technical-knowledge?q=...`: busca documentación técnica.
 - `POST /api/technical-knowledge`: crea una solución o documento técnico.
-- `GET /api/analytics/dashboard`: devuelve métricas operativas del taller.
+- `GET /api/analytics/dashboard`: devuelve métricas operativas del taller, incluyendo la tendencia de recepción/entrega de los últimos 7 días (`weeklyVolume`), el desglose de órdenes activas por estado (`statusBreakdown`) y los equipos recibidos hoy por categoría (`todayReception`).
 - `GET /api/analytics/technicians?from=&to=`: por cada técnico, órdenes cerradas, órdenes activas, tiempo promedio de reparación e ingresos/ganancia generados; solo administradores.
 - `GET /api/search?q=...`: búsqueda global (mín. 2 caracteres) en clientes, órdenes de servicio e inventario, hasta 5 resultados por categoría.
 - `GET /api/finance/summary?from=&to=`: ingresos (pagos), gastos (órdenes de compra recibidas), ganancia neta, tendencia mensual y movimientos; solo administradores.
