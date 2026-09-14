@@ -6,6 +6,8 @@ export default function CardOverride(theme) {
       styleOverrides: {
         root: {
           '&[href]': {
+            display: 'flex',
+            flexDirection: 'column',
             cursor: 'pointer',
             textDecoration: 'none',
             color: 'inherit',
