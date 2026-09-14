@@ -29,7 +29,6 @@ export default function MainCard({
   ...others
 }) {
   const defaultShadow = '0 2px 14px 0 rgb(32 40 45 / 8%)';
-  const interactive = Boolean(others.component);
 
   return (
     <Card
@@ -38,22 +37,9 @@ export default function MainCard({
       sx={(theme) => ({
         border: border ? '1px solid' : 'none',
         borderColor: 'divider',
-        ...(interactive && {
-          cursor: 'pointer',
-          textDecoration: 'none',
-          color: 'inherit',
-          transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease'
-        }),
         ':hover': {
-          boxShadow: boxShadow ? shadow || defaultShadow : interactive ? defaultShadow : 'inherit',
-          ...(interactive && { transform: 'translateY(-2px)', backgroundColor: theme.vars.palette.action.hover })
+          boxShadow: boxShadow ? shadow || defaultShadow : 'inherit'
         },
-        ...(interactive && {
-          ':active': {
-            transform: 'translateY(0) scale(0.98)',
-            transition: 'transform 0.08s ease'
-          }
-        }),
         ...(typeof sx === 'function' ? sx(theme) : sx || {})
       })}
     >

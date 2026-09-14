@@ -5,6 +5,7 @@ import { merge } from 'lodash-es';
 import Alert from './Alert';
 import Avatar from './Avatar';
 import Button from './Button';
+import CardOverride from './Card';
 import CardActions from './CardActions';
 import CardContent from './CardContent';
 import CardHeader from './CardHeader';
@@ -35,6 +36,7 @@ export default function ComponentsOverrides(theme, borderRadius, outlinedFilled)
     Alert(theme),
     Avatar(theme),
     Button(theme),
+    CardOverride(theme),
     CardActions,
     CardContent(),
     CardHeader(theme),
