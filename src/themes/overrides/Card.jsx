@@ -1,6 +1,6 @@
 // ==============================|| OVERRIDES - CARD (interactive/link cards) ||============================== //
 
-export default function CardOverride(theme) {
+export default function CardOverride() {
   return {
     MuiCard: {
       styleOverrides: {
@@ -10,16 +10,14 @@ export default function CardOverride(theme) {
             textDecoration: 'none',
             color: 'inherit',
             overflow: 'visible',
-            border: '1px solid transparent',
-            transition: 'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease'
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease'
           },
           '&[href]:hover': {
-            transform: 'translateY(-4px)',
-            borderColor: theme.vars.palette.divider,
-            boxShadow: theme.vars.customShadows.z16
+            transform: 'translateY(-6px)',
+            boxShadow: '0 16px 32px -4px rgba(0, 0, 0, 0.45)'
           },
           '&[href]:active': {
-            transform: 'translateY(-1px)',
+            transform: 'translateY(-2px)',
             transition: 'transform 0.08s ease'
           }
         }
