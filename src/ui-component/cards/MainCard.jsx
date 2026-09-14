@@ -43,6 +43,12 @@ export default function MainCard({
           boxShadow: boxShadow ? shadow || defaultShadow : interactive ? defaultShadow : 'inherit',
           ...(interactive && { transform: 'translateY(-2px)' })
         },
+        ...(interactive && {
+          ':active': {
+            transform: 'translateY(0) scale(0.98)',
+            transition: 'transform 0.08s ease'
+          }
+        }),
         ...(typeof sx === 'function' ? sx(theme) : sx || {})
       })}
     >
