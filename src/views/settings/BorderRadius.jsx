@@ -7,10 +7,11 @@ import Typography from '@mui/material/Typography';
 // project imports
 import useConfig from 'hooks/useConfig';
 
-// concat 'px'
 function valueText(value) {
   return `${value}px`;
 }
+
+// ==============================|| CONFIGURACIÓN - RADIO DE BORDES ||============================== //
 
 export default function BorderRadius() {
   const {
@@ -23,9 +24,9 @@ export default function BorderRadius() {
   };
 
   return (
-    <Stack sx={{ pl: 2, pb: 2, pr: 4, gap: 2.5 }}>
-      <Typography variant="h5">BORDER RADIUS</Typography>
-      <Grid container spacing={1.25} sx={{ pt: 2, alignItems: 'center', justifyContent: 'center' }}>
+    <Stack sx={{ gap: 2 }}>
+      <Typography variant="subtitle1">Radio de bordes</Typography>
+      <Grid container spacing={1.25} sx={{ alignItems: 'center', maxWidth: 420 }}>
         <Grid>
           <Typography variant="h6">4px</Typography>
         </Grid>
@@ -36,13 +37,10 @@ export default function BorderRadius() {
             onChange={handleChange}
             getAriaValueText={valueText}
             valueLabelDisplay="on"
-            aria-labelledby="discrete-slider-small-steps"
+            aria-labelledby="border-radius-slider"
             min={4}
             max={24}
             color="primary"
-            sx={(theme) => ({
-              '& .MuiSlider-valueLabel': { color: 'primary.light' }
-            })}
           />
         </Grid>
         <Grid>

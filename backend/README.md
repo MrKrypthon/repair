@@ -63,7 +63,11 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `PATCH /api/service-orders/:folio`: edita falla reportada, prioridad, fecha estimada de entrega y datos del equipo.
 - `PATCH /api/service-orders/:folio/status`: cambia el estado y registra la transición.
 - `POST /api/auth/login`: autentica al usuario y devuelve un JWT.
-- `GET /api/auth/me`: devuelve el usuario autenticado.
+- `GET /api/auth/me`: devuelve el usuario autenticado, incluyendo `avatarUrl` si tiene foto de perfil.
+- `PATCH /api/auth/me`: actualiza el nombre del usuario autenticado.
+- `PATCH /api/auth/me/password`: cambia la contraseña del usuario autenticado (requiere la contraseña actual).
+- `POST /api/auth/me/avatar`: sube o reemplaza la foto de perfil (`multipart/form-data`, campo `file`; JPG/PNG/WEBP, máx. 5MB).
+- `DELETE /api/auth/me/avatar`: elimina la foto de perfil.
 - `GET /api/auth/technicians`: lista técnicos activos.
 - `PATCH /api/service-orders/:folio/technician`: asigna o desasigna un técnico.
 - `GET /api/public/tracking/:token`: consulta pública y segura del estado de una orden.

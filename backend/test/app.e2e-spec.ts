@@ -438,4 +438,46 @@ describe('Electrónica Tech API (e2e)', () => {
 
     await request(app.getHttpServer()).get('/api/quotations').expect(401);
   });
+
+  it('lets a user manage their own profile: name, password and avatar', async () => {
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+    const adminLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const adminToken = adminLogin.body.accessToken;
+    const suffix = Date.now();
+
+    await request(app.getHttpServer()).post('/api/users').set('Authorization', `Bearer ${adminToken}`).send({ name: `E2E Técnico Perfil ${suffix}`, email: `e2e-profile-${suffix}@test.local`, password: 'Tecnico123!', role: 'TECHNICIAN' }).expect(201);
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: `e2e-profile-${suffix}@test.local`, password: 'Tecnico123!' }).expect(201);
+    const token = login.body.accessToken;
+
+    const me = await request(app.getHttpServer()).get('/api/auth/me').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(me.body.avatarUrl).toBeNull();
+
+    const renamed = await request(app.getHttpServer()).patch('/api/auth/me').set('Authorization', `Bearer ${token}`).send({ name: 'Nombre Actualizado E2E' }).expect(200);
+    expect(renamed.body.name).toBe('Nombre Actualizado E2E');
+
+    // contraseña actual incorrecta se rechaza
+    await request(app.getHttpServer()).patch('/api/auth/me/password').set('Authorization', `Bearer ${token}`).send({ currentPassword: 'incorrecta', newPassword: 'NuevaClave123!' }).expect(400);
+
+    await request(app.getHttpServer()).patch('/api/auth/me/password').set('Authorization', `Bearer ${token}`).send({ currentPassword: 'Tecnico123!', newPassword: 'NuevaClave123!' }).expect(200);
+
+    // la contraseña anterior ya no funciona; la nueva sí
+    await request(app.getHttpServer()).post('/api/auth/login').send({ email: `e2e-profile-${suffix}@test.local`, password: 'Tecnico123!' }).expect(401);
+    await request(app.getHttpServer()).post('/api/auth/login').send({ email: `e2e-profile-${suffix}@test.local`, password: 'NuevaClave123!' }).expect(201);
+
+    const avatar = await request(app.getHttpServer())
+      .post('/api/auth/me/avatar')
+      .set('Authorization', `Bearer ${token}`)
+      .attach('file', png, { filename: 'avatar.png', contentType: 'image/png' })
+      .expect(201);
+    expect(avatar.body.avatarUrl).toEqual(expect.any(String));
+
+    await request(app.getHttpServer())
+      .post('/api/auth/me/avatar')
+      .set('Authorization', `Bearer ${token}`)
+      .attach('file', Buffer.from('no es una imagen'), { filename: 'nota.txt', contentType: 'text/plain' })
+      .expect(400);
+
+    const withoutAvatar = await request(app.getHttpServer()).delete('/api/auth/me/avatar').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(withoutAvatar.body.avatarUrl).toBeNull();
+  });
 });

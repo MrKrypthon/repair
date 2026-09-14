@@ -137,6 +137,7 @@ model User {
   password  String
   role      UserRole @default(TECHNICIAN)
   active    Boolean  @default(true)
+  avatarKey String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   assignedOrders ServiceOrder[] @relation("AssignedOrders")

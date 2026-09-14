@@ -24,6 +24,7 @@ const TechnicalKnowledge = Loadable(lazy(() => import('views/technical-knowledge
 const Users = Loadable(lazy(() => import('views/users')));
 const Suppliers = Loadable(lazy(() => import('views/suppliers')));
 const PurchaseOrders = Loadable(lazy(() => import('views/purchase-orders')));
+const Settings = Loadable(lazy(() => import('views/settings')));
 
 // utilities routing
 const UtilsTypography = Loadable(lazy(() => import('views/utilities/Typography')));
@@ -114,6 +115,10 @@ const MainRoutes = {
     {
       path: 'purchase-orders',
       element: <PurchaseOrders />
+    },
+    {
+      path: 'settings',
+      element: <Settings />
     },
     {
       path: 'typography',

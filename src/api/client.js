@@ -31,6 +31,14 @@ async function request(path, options = {}) {
 export const api = {
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   me: () => request('/auth/me'),
+  updateProfile: (data) => request('/auth/me', { method: 'PATCH', body: JSON.stringify(data) }),
+  changePassword: (data) => request('/auth/me/password', { method: 'PATCH', body: JSON.stringify(data) }),
+  uploadAvatar: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request('/auth/me/avatar', { method: 'POST', body: formData });
+  },
+  removeAvatar: () => request('/auth/me/avatar', { method: 'DELETE' }),
   listTechnicians: () => request('/auth/technicians'),
   listCustomers: () => request('/customers'),
   createCustomer: (data) => request('/customers', { method: 'POST', body: JSON.stringify(data) }),
