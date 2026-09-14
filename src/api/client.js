@@ -83,6 +83,16 @@ export const api = {
   createUser: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
   listSuppliers: () => request('/suppliers'),
   createSupplier: (data) => request('/suppliers', { method: 'POST', body: JSON.stringify(data) }),
+  listServiceCatalog: (query = '', includeInactive = false) => {
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    if (includeInactive) params.set('includeInactive', 'true');
+    const search = params.toString();
+    return request(`/service-catalog${search ? `?${search}` : ''}`);
+  },
+  createServiceCatalogItem: (data) => request('/service-catalog', { method: 'POST', body: JSON.stringify(data) }),
+  updateServiceCatalogItem: (id, data) => request(`/service-catalog/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  archiveServiceCatalogItem: (id, active) => request(`/service-catalog/${id}/archive`, { method: 'PATCH', body: JSON.stringify({ active }) }),
   listPurchaseOrders: () => request('/purchase-orders'),
   createPurchaseOrder: (data) => request('/purchase-orders', { method: 'POST', body: JSON.stringify(data) }),
   receivePurchaseOrder: (id) => request(`/purchase-orders/${id}/receive`, { method: 'PATCH' }),

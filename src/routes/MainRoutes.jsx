@@ -19,6 +19,7 @@ const Quotations = Loadable(lazy(() => import('views/quotations')));
 const NewQuotation = Loadable(lazy(() => import('views/quotations/new')));
 const QuotationDetail = Loadable(lazy(() => import('views/quotations/detail')));
 const Inventory = Loadable(lazy(() => import('views/inventory')));
+const ServiceCatalog = Loadable(lazy(() => import('views/service-catalog')));
 const Appointments = Loadable(lazy(() => import('views/appointments')));
 const TechnicalKnowledge = Loadable(lazy(() => import('views/technical-knowledge')));
 const Users = Loadable(lazy(() => import('views/users')));
@@ -95,6 +96,10 @@ const MainRoutes = {
     {
       path: 'inventory',
       element: <Inventory />
+    },
+    {
+      path: 'service-catalog',
+      element: <ServiceCatalog />
     },
     {
       path: 'appointments',

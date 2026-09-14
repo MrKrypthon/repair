@@ -483,4 +483,36 @@ describe('Electrónica Tech API (e2e)', () => {
     const withoutAvatar = await request(app.getHttpServer()).delete('/api/auth/me/avatar').set('Authorization', `Bearer ${token}`).expect(200);
     expect(withoutAvatar.body.avatarUrl).toBeNull();
   });
+
+  it('manages a service catalog (labor/services) with cost and price for quotations', async () => {
+    const login = await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'admin@electronicatech.local', password: 'Admin123!' }).expect(201);
+    const token = login.body.accessToken;
+    const suffix = Date.now();
+    const name = `Diagnóstico E2E ${suffix}`;
+
+    const created = await request(app.getHttpServer()).post('/api/service-catalog').set('Authorization', `Bearer ${token}`).send({ name, description: 'Revisión completa', cost: 20, price: 150 }).expect(201);
+    expect(created.body.active).toBe(true);
+    expect(created.body.cost).toBe('20');
+    expect(created.body.price).toBe('150');
+
+    const list = await request(app.getHttpServer()).get('/api/service-catalog').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(list.body.some((item: { id: string }) => item.id === created.body.id)).toBe(true);
+
+    const updated = await request(app.getHttpServer()).patch(`/api/service-catalog/${created.body.id}`).set('Authorization', `Bearer ${token}`).send({ price: 175 }).expect(200);
+    expect(updated.body.price).toBe('175');
+
+    await request(app.getHttpServer()).patch(`/api/service-catalog/${created.body.id}/archive`).set('Authorization', `Bearer ${token}`).send({ active: false }).expect(200);
+
+    const listAfterArchive = await request(app.getHttpServer()).get('/api/service-catalog').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(listAfterArchive.body.some((item: { id: string }) => item.id === created.body.id)).toBe(false);
+
+    const listIncludingInactive = await request(app.getHttpServer()).get('/api/service-catalog?includeInactive=true').set('Authorization', `Bearer ${token}`).expect(200);
+    expect(listIncludingInactive.body.some((item: { id: string }) => item.id === created.body.id)).toBe(true);
+
+    await request(app.getHttpServer()).post('/api/users').set('Authorization', `Bearer ${token}`).send({ name: `E2E Técnico Catálogo ${suffix}`, email: `e2e-catalog-tech-${suffix}@test.local`, password: 'Tecnico123!', role: 'TECHNICIAN' }).expect(201);
+    const techLogin = await request(app.getHttpServer()).post('/api/auth/login').send({ email: `e2e-catalog-tech-${suffix}@test.local`, password: 'Tecnico123!' }).expect(201);
+    await request(app.getHttpServer()).post('/api/service-catalog').set('Authorization', `Bearer ${techLogin.body.accessToken}`).send({ name: 'x', price: 1 }).expect(403);
+
+    await request(app.getHttpServer()).get('/api/service-catalog').expect(401);
+  });
 });

@@ -103,6 +103,10 @@ DATABASE_URL="postgresql://electronica:electronica_dev@localhost:5433/electronic
 - `POST /api/users`: crea un usuario; solo administradores.
 - `GET /api/suppliers`: lista proveedores activos.
 - `POST /api/suppliers`: crea un proveedor.
+- `GET /api/service-catalog?q=&includeInactive=`: lista el catálogo de precios de mano de obra/servicios (activos por defecto; búsqueda opcional por nombre).
+- `POST /api/service-catalog`: crea un servicio con costo y precio; solo Admin/Recepción.
+- `PATCH /api/service-catalog/:id`: edita nombre, descripción, costo o precio; solo Admin/Recepción.
+- `PATCH /api/service-catalog/:id/archive`: activa o desactiva un servicio sin borrar su historial de uso en cotizaciones anteriores; solo Admin/Recepción.
 - `GET /api/purchase-orders`: lista órdenes de compra.
 - `POST /api/purchase-orders`: crea una orden de compra.
 - `PATCH /api/purchase-orders/:id/receive`: recibe la compra y aumenta el stock.

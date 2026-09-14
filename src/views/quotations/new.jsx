@@ -6,6 +6,7 @@ import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import Alert from '@mui/material/Alert';
+import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
@@ -30,12 +31,23 @@ export default function NewQuotation() {
   const [form, setForm] = useState({ customer: searchParams.get('customerId') || '', deviceId: '', category: '', brand: '', model: '', issueDescription: '', notes: '', validUntil: '' });
   const [items, setItems] = useState([]);
   const [draft, setDraft] = useState(emptyItem);
+  const [catalogOptions, setCatalogOptions] = useState([]);
   const update = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
 
   useEffect(() => {
     api.listCustomers().then(setCustomers).catch(() => setError('No se pudo cargar la lista de clientes. Inicia el backend para crear cotizaciones.'));
   }, []);
   useEffect(() => { if (form.customer) api.getCustomer(form.customer).then((customer) => setDevices(customer.devices)).catch(() => setDevices([])); else setDevices([]); }, [form.customer]);
+  useEffect(() => {
+    Promise.all([api.listInventory(), api.listServiceCatalog()])
+      .then(([parts, services]) => {
+        setCatalogOptions([
+          ...parts.map((part) => ({ key: `part-${part.id}`, label: part.name, source: 'Piezas', price: Number(part.salePrice), sku: part.sku })),
+          ...services.map((service) => ({ key: `service-${service.id}`, label: service.name, source: 'Servicios y mano de obra', price: Number(service.price) }))
+        ]);
+      })
+      .catch(() => {});
+  }, []);
 
   const addItem = () => {
     if (!draft.description || !draft.quantity || draft.unitPrice === '') return;
@@ -84,8 +96,34 @@ export default function NewQuotation() {
           <Typography variant="h4">Falla reportada</Typography>
           <TextField required fullWidth multiline minRows={3} label="Falla reportada por el cliente" placeholder="Describe el problema tal como lo explica el cliente..." value={form.issueDescription} onChange={update('issueDescription')} />
           <Typography variant="h4">Conceptos</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: -1.5 }}>
+            Elige una pieza o servicio del catálogo para que el precio se llene solo, o escribe un concepto libre y captura el precio a mano.
+          </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <TextField fullWidth label="Descripción" placeholder="Ej. Pantalla OLED" value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} />
+            <Autocomplete
+              freeSolo
+              fullWidth
+              options={catalogOptions}
+              groupBy={(option) => option.source}
+              getOptionLabel={(option) => (typeof option === 'string' ? option : option.label)}
+              filterOptions={(options, state) =>
+                options.filter((option) => option.label.toLowerCase().includes(state.inputValue.toLowerCase())).slice(0, 30)
+              }
+              inputValue={draft.description}
+              onInputChange={(event, newValue) => setDraft((current) => ({ ...current, description: newValue }))}
+              onChange={(event, value) => {
+                if (value && typeof value !== 'string') {
+                  setDraft((current) => ({ ...current, description: value.label, unitPrice: value.price }));
+                }
+              }}
+              renderOption={(props, option) => (
+                <Stack component="li" {...props} key={option.key} direction="row" sx={{ justifyContent: 'space-between', width: '100%' }}>
+                  <Typography variant="body2">{option.label}{option.sku ? ` · ${option.sku}` : ''}</Typography>
+                  <Typography variant="body2" color="text.secondary">{money(option.price)}</Typography>
+                </Stack>
+              )}
+              renderInput={(params) => <TextField {...params} label="Descripción" placeholder="Escribe o elige del catálogo..." />}
+            />
             <TextField type="number" label="Cantidad" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: event.target.value })} inputProps={{ min: 1 }} sx={{ minWidth: 110 }} />
             <TextField type="number" label="Precio unitario" value={draft.unitPrice} onChange={(event) => setDraft({ ...draft, unitPrice: event.target.value })} inputProps={{ min: 0, step: '0.01' }} sx={{ minWidth: 140 }} />
             <Button variant="outlined" startIcon={<AddRoundedIcon />} onClick={addItem} sx={{ whiteSpace: 'nowrap' }}>Agregar</Button>
