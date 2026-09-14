@@ -5,9 +5,12 @@ export default function Button(theme) {
     MuiButton: {
       styleOverrides: {
         root: {
-          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease, outline-color 0.15s ease',
+          outline: '2px solid transparent',
+          outlineOffset: '2px',
           '&:not(.Mui-disabled):hover': {
-            transform: 'translateY(-2px)'
+            transform: 'translateY(-2px)',
+            outlineColor: 'currentColor'
           },
           '&:not(.Mui-disabled):active': {
             transform: 'translateY(0) scale(0.97)',
