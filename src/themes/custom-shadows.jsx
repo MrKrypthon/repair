@@ -25,6 +25,6 @@ function createCustomShadow(palette, baseColor) {
 }
 
 export default function CustomShadows(palette, mode) {
-  const baseColor = palette.grey[900];
+  const baseColor = mode === 'dark' ? '#000000' : palette.grey[900];
   return createCustomShadow(palette, baseColor);
 }
