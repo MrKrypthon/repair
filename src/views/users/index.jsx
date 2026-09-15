@@ -27,7 +27,17 @@ import { api } from 'api/client';
 
 const roleLabels = { ADMIN: 'Administrador', TECHNICIAN: 'Técnico', RECEPTIONIST: 'Recepción' };
 const PASSWORD_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
-const generatePassword = () => Array.from({ length: 12 }, () => PASSWORD_CHARS[Math.floor(Math.random() * PASSWORD_CHARS.length)]).join('');
+const randomIndex = (max) => {
+  const limit = Math.floor(0xffffffff / max) * max;
+  const arr = new Uint32Array(1);
+  let value;
+  do {
+    crypto.getRandomValues(arr);
+    value = arr[0];
+  } while (value >= limit);
+  return value % max;
+};
+const generatePassword = () => Array.from({ length: 12 }, () => PASSWORD_CHARS[randomIndex(PASSWORD_CHARS.length)]).join('');
 
 export default function Users() {
   const [users, setUsers] = useState([]);
