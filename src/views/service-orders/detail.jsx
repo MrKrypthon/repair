@@ -16,6 +16,7 @@ import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import PictureAsPdfRoundedIcon from '@mui/icons-material/PictureAsPdfRounded';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import Alert from '@mui/material/Alert';
+import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
@@ -57,6 +58,8 @@ const statuses = [
 ];
 
 const testOptions = ['Encendido', 'Carga', 'Pantalla', 'Cámaras', 'Audio', 'Red', 'Wi-Fi', 'Bluetooth'];
+const COMMON_ISSUES = ['Pantalla rota', 'No enciende', 'No carga / batería', 'Se mojó', 'Botones no responden', 'Cámara no funciona', 'Audio/bocina falla', 'Lento o se congela'];
+const money = (value) => `$${Number(value || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
 
 const statusLabel = (value) => statuses.find(([key]) => key === value)?.[1] || value;
 
@@ -75,6 +78,7 @@ export default function ServiceOrderDetail() {
   const [budget, setBudget] = useState({ partsCost: '', laborCost: '', otherCharges: '', finalCost: '', budgetStatus: 'PENDING' });
   const [savingBudget, setSavingBudget] = useState(false);
   const [inventory, setInventory] = useState([]);
+  const [serviceCatalog, setServiceCatalog] = useState([]);
   const [part, setPart] = useState({ inventoryItemId: '', quantity: 1 });
   const [savingPart, setSavingPart] = useState(false);
   const [diagnosis, setDiagnosis] = useState({ diagnosis: '', probableCause: '', testChecklist: {} });
@@ -100,7 +104,16 @@ export default function ServiceOrderDetail() {
 
   useEffect(() => { loadOrder(); }, [orderId]);
   useEffect(() => { api.listInventory().then(setInventory).catch(() => {}); }, []);
+  useEffect(() => { api.listServiceCatalog().then(setServiceCatalog).catch(() => {}); }, []);
   useEffect(() => { api.listTechnicians().then(setTechnicians).catch(() => {}); }, []);
+
+  const addLaborFromCatalog = (service) => {
+    if (!service) return;
+    setBudget((current) => ({ ...current, laborCost: (Number(current.laborCost || 0) + Number(service.price)).toFixed(2) }));
+  };
+  const addIssue = (issue) => {
+    setOrderEdit((current) => ({ ...current, reportedIssue: current.reportedIssue ? `${current.reportedIssue}; ${issue}` : issue }));
+  };
 
   const saveStatus = () => {
     setSaving(true);
@@ -229,7 +242,14 @@ export default function ServiceOrderDetail() {
                   <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="IMEI" value={orderEdit.device.imei} onChange={(event) => setOrderEdit({ ...orderEdit, device: { ...orderEdit.device, imei: event.target.value } })} /></Grid>
                 </Grid>
                 <Typography variant="subtitle1">Falla y prioridad</Typography>
-                <TextField fullWidth multiline minRows={3} label="Falla reportada" value={orderEdit.reportedIssue} onChange={(event) => setOrderEdit({ ...orderEdit, reportedIssue: event.target.value })} />
+                <Stack spacing={1}>
+                  <TextField fullWidth multiline minRows={3} label="Falla reportada" value={orderEdit.reportedIssue} onChange={(event) => setOrderEdit({ ...orderEdit, reportedIssue: event.target.value })} />
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                    {COMMON_ISSUES.map((issue) => (
+                      <Chip key={issue} label={issue} size="small" variant="outlined" onClick={() => addIssue(issue)} />
+                    ))}
+                  </Stack>
+                </Stack>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6 }}><TextField select fullWidth label="Prioridad" value={orderEdit.priority} onChange={(event) => setOrderEdit({ ...orderEdit, priority: event.target.value })}><MenuItem value="NORMAL">Normal</MenuItem><MenuItem value="ALTA">Alta</MenuItem><MenuItem value="URGENTE">Urgente</MenuItem></TextField></Grid>
                   <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth type="datetime-local" label="Entrega estimada" InputLabelProps={{ shrink: true }} value={orderEdit.estimatedDeliveryAt} onChange={(event) => setOrderEdit({ ...orderEdit, estimatedDeliveryAt: event.target.value })} /></Grid>
@@ -341,7 +361,7 @@ export default function ServiceOrderDetail() {
         <Grid size={{ xs: 12, md: 5 }}>
           <Stack spacing={3}>
             <MainCard title="Presupuesto">
-            <Stack spacing={2}><TextField fullWidth type="number" label="Piezas" value={budget.partsCost} onChange={(event) => setBudget({ ...budget, partsCost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><TextField fullWidth type="number" label="Mano de obra" value={budget.laborCost} onChange={(event) => setBudget({ ...budget, laborCost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><TextField fullWidth type="number" label="Otros cargos" value={budget.otherCharges} onChange={(event) => setBudget({ ...budget, otherCharges: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><TextField fullWidth type="number" label="Precio final" value={budget.finalCost} onChange={(event) => setBudget({ ...budget, finalCost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><TextField select fullWidth label="Autorización" value={budget.budgetStatus} onChange={(event) => setBudget({ ...budget, budgetStatus: event.target.value })} disabled={isTechnician} helperText={isTechnician ? 'Solo administración o recepción pueden autorizar o rechazar el presupuesto.' : ''}><MenuItem value="PENDING">Pendiente</MenuItem><MenuItem value="APPROVED">Autorizado</MenuItem><MenuItem value="REJECTED">Rechazado</MenuItem></TextField><Divider /><Stack direction="row" sx={{ justifyContent: 'space-between' }}><Typography variant="h4">Total estimado</Typography><Typography variant="h3">${[budget.partsCost, budget.laborCost, budget.otherCharges].reduce((total, value) => total + Number(value || 0), 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</Typography></Stack><Button variant="contained" onClick={saveBudget} disabled={savingBudget}>{savingBudget ? 'Guardando...' : 'Guardar presupuesto'}</Button></Stack>
+            <Stack spacing={2}><TextField fullWidth type="number" label="Piezas" value={budget.partsCost} onChange={(event) => setBudget({ ...budget, partsCost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><TextField fullWidth type="number" label="Mano de obra" value={budget.laborCost} onChange={(event) => setBudget({ ...budget, laborCost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><Autocomplete options={serviceCatalog} getOptionLabel={(option) => option.name} value={null} onChange={(event, service) => addLaborFromCatalog(service)} renderOption={(props, option) => (<Stack component="li" {...props} key={option.id} direction="row" sx={{ justifyContent: 'space-between', width: '100%' }}><Typography variant="body2">{option.name}</Typography><Typography variant="body2" color="text.secondary">{money(option.price)}</Typography></Stack>)} renderInput={(params) => <TextField {...params} label="Agregar servicio del catálogo (opcional)" placeholder="Busca un servicio para sumarlo a Mano de obra" />} /><TextField fullWidth type="number" label="Otros cargos" value={budget.otherCharges} onChange={(event) => setBudget({ ...budget, otherCharges: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><TextField fullWidth type="number" label="Precio final" value={budget.finalCost} onChange={(event) => setBudget({ ...budget, finalCost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><TextField select fullWidth label="Autorización" value={budget.budgetStatus} onChange={(event) => setBudget({ ...budget, budgetStatus: event.target.value })} disabled={isTechnician} helperText={isTechnician ? 'Solo administración o recepción pueden autorizar o rechazar el presupuesto.' : ''}><MenuItem value="PENDING">Pendiente</MenuItem><MenuItem value="APPROVED">Autorizado</MenuItem><MenuItem value="REJECTED">Rechazado</MenuItem></TextField><Divider /><Stack direction="row" sx={{ justifyContent: 'space-between' }}><Typography variant="h4">Total estimado</Typography><Typography variant="h3">${[budget.partsCost, budget.laborCost, budget.otherCharges].reduce((total, value) => total + Number(value || 0), 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</Typography></Stack><Button variant="contained" onClick={saveBudget} disabled={savingBudget}>{savingBudget ? 'Guardando...' : 'Guardar presupuesto'}</Button></Stack>
           </MainCard>
           <MainCard title="Piezas utilizadas">
             <Stack spacing={2}><TextField select fullWidth label="Pieza" value={part.inventoryItemId} onChange={(event) => setPart({ ...part, inventoryItemId: event.target.value })}><MenuItem value="">Selecciona una pieza</MenuItem>{inventory.map((item) => <MenuItem key={item.id} value={item.id}>{item.name} · {item.stock} disponibles</MenuItem>)}</TextField><TextField fullWidth type="number" label="Cantidad" value={part.quantity} onChange={(event) => setPart({ ...part, quantity: event.target.value })} inputProps={{ min: 1, step: 1 }} /><Button variant="outlined" onClick={savePart} disabled={savingPart || !part.inventoryItemId}>{savingPart ? 'Guardando...' : 'Agregar pieza'}</Button>{order.parts?.length > 0 && <Stack spacing={1}>{order.parts.map((usedPart) => <Stack direction="row" key={usedPart.id} sx={{ justifyContent: 'space-between' }}><Typography variant="body2">{usedPart.inventoryItem.name} × {usedPart.quantity}</Typography><Typography variant="body2">${(Number(usedPart.unitPrice) * usedPart.quantity).toLocaleString('es-MX')}</Typography></Stack>)}</Stack>}</Stack>
