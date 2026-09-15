@@ -21,6 +21,7 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
+import ConfirmDialog from 'ui-component/ConfirmDialog';
 import MainCard from 'ui-component/cards/MainCard';
 import { api } from 'api/client';
 
@@ -43,6 +44,7 @@ export default function CustomerDetail() {
   const [savingCustomer, setSavingCustomer] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', phone: '', email: '', notes: '' });
   const [allCustomers, setAllCustomers] = useState([]);
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
   useEffect(() => {
     api
       .getCustomer(customerId)
@@ -100,11 +102,10 @@ export default function CustomerDetail() {
       .finally(() => setSavingCustomer(false));
   };
   const archiveCustomer = () => {
-    if (window.confirm('¿Archivar este cliente? Su historial se conservará.'))
-      api
-        .archiveCustomer(customerId, false)
-        .then(() => navigate('/customers'))
-        .catch(() => setError('No se pudo archivar el cliente.'));
+    api
+      .archiveCustomer(customerId, false)
+      .then(() => navigate('/customers'))
+      .catch(() => setError('No se pudo archivar el cliente.'));
   };
 
   if (error) return <Alert severity="error">{error}</Alert>;
@@ -170,7 +171,7 @@ export default function CustomerDetail() {
           <Button variant="outlined" onClick={() => setEditing((value) => !value)}>
             {editing ? 'Cerrar edición' : 'Editar cliente'}
           </Button>
-          <Button color="error" onClick={archiveCustomer}>
+          <Button color="error" onClick={() => setConfirmArchiveOpen(true)}>
             Archivar
           </Button>
           <Button component={Link} to={`/service-orders/new?customerId=${customer.id}`} variant="contained" startIcon={<AddRoundedIcon />}>
@@ -328,6 +329,14 @@ export default function CustomerDetail() {
           </Button>
         </Stack>
       </MainCard>
+      <ConfirmDialog
+        open={confirmArchiveOpen}
+        title="Archivar cliente"
+        description="Su historial de órdenes y cotizaciones se conservará, pero dejará de aparecer en las búsquedas activas."
+        confirmLabel="Archivar"
+        onConfirm={archiveCustomer}
+        onClose={() => setConfirmArchiveOpen(false)}
+      />
     </Stack>
   );
 }

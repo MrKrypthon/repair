@@ -14,6 +14,7 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
+import ConfirmDialog from 'ui-component/ConfirmDialog';
 import MainCard from 'ui-component/cards/MainCard';
 import { api } from 'api/client';
 
@@ -29,6 +30,7 @@ export default function PurchaseOrders() {
   const [notes, setNotes] = useState('');
   const [draft, setDraft] = useState(emptyDraft);
   const [lines, setLines] = useState([]);
+  const [orderToCancel, setOrderToCancel] = useState(null);
 
   const load = () =>
     api
@@ -134,7 +136,7 @@ export default function PurchaseOrders() {
                 </Button>
               )}
               {(order.status === 'DRAFT' || order.status === 'ORDERED') && (
-                <Button size="small" color="error" onClick={() => cancel(order.id)}>
+                <Button size="small" color="error" onClick={() => setOrderToCancel(order)}>
                   Cancelar
                 </Button>
               )}
@@ -219,6 +221,14 @@ export default function PurchaseOrders() {
           </DialogActions>
         </Stack>
       </Dialog>
+      <ConfirmDialog
+        open={Boolean(orderToCancel)}
+        title="Cancelar orden de compra"
+        description={`¿Cancelar la orden ${orderToCancel?.folio || ''} a ${orderToCancel?.supplier?.name || 'este proveedor'}? Esta acción no se puede deshacer.`}
+        confirmLabel="Cancelar orden"
+        onConfirm={() => cancel(orderToCancel.id)}
+        onClose={() => setOrderToCancel(null)}
+      />
     </Stack>
   );
 }

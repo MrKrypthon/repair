@@ -38,6 +38,7 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
+import ConfirmDialog from 'ui-component/ConfirmDialog';
 import MainCard from 'ui-component/cards/MainCard';
 import { api } from 'api/client';
 import { activeStepIndex, journeySteps } from 'utils/serviceOrderJourney';
@@ -112,6 +113,7 @@ export default function ServiceOrderDetail() {
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
   const [claimForm, setClaimForm] = useState({ reportedIssue: '', priority: 'NORMAL' });
   const [creatingClaim, setCreatingClaim] = useState(false);
+  const [attachmentToDelete, setAttachmentToDelete] = useState(null);
 
   const loadOrder = () =>
     api
@@ -577,7 +579,7 @@ export default function ServiceOrderDetail() {
                           </Box>
                           <IconButton
                             size="small"
-                            onClick={() => deleteAttachment(photo.id)}
+                            onClick={() => setAttachmentToDelete({ id: photo.id, label: 'esta foto' })}
                             sx={{
                               position: 'absolute',
                               top: 4,
@@ -621,7 +623,7 @@ export default function ServiceOrderDetail() {
                             {doc.fileName}
                           </Typography>
                         </Stack>
-                        <IconButton size="small" onClick={() => deleteAttachment(doc.id)}>
+                        <IconButton size="small" onClick={() => setAttachmentToDelete({ id: doc.id, label: doc.fileName })}>
                           <DeleteRoundedIcon fontSize="small" color="error" />
                         </IconButton>
                       </Stack>
@@ -1147,6 +1149,15 @@ export default function ServiceOrderDetail() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={Boolean(attachmentToDelete)}
+        title="Eliminar archivo"
+        description={`¿Eliminar ${attachmentToDelete?.label || 'este archivo'}? No se puede deshacer.`}
+        confirmLabel="Eliminar"
+        onConfirm={() => deleteAttachment(attachmentToDelete.id)}
+        onClose={() => setAttachmentToDelete(null)}
+      />
     </Stack>
   );
 }
