@@ -32,19 +32,35 @@ export default function AuthLogin() {
     event.preventDefault();
     setLoading(true);
     setError('');
-    api.login({ email, password }).then((result) => {
-      localStorage.setItem('fixtrack-token', result.accessToken);
-      localStorage.setItem('fixtrack-user', JSON.stringify(result.user));
-      navigate(result.user.role === 'TECHNICIAN' ? '/service-orders' : '/dashboard');
-    }).catch(() => setError('Correo o contraseña incorrectos.')).finally(() => setLoading(false));
+    api
+      .login({ email, password })
+      .then((result) => {
+        localStorage.setItem('fixtrack-token', result.accessToken);
+        localStorage.setItem('fixtrack-user', JSON.stringify(result.user));
+        navigate(result.user.role === 'TECHNICIAN' ? '/service-orders' : '/dashboard');
+      })
+      .catch(() => setError('Correo o contraseña incorrectos.'))
+      .finally(() => setLoading(false));
   };
 
   return (
     <Box component="form" onSubmit={handleSubmit}>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
       <CustomFormControl fullWidth>
         <InputLabel htmlFor="outlined-adornment-email-login">Correo electrónico</InputLabel>
-        <OutlinedInput id="outlined-adornment-email-login" type="email" value={email} onChange={(event) => setEmail(event.target.value)} name="email" required label="Correo electrónico" />
+        <OutlinedInput
+          id="outlined-adornment-email-login"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          name="email"
+          required
+          label="Correo electrónico"
+        />
       </CustomFormControl>
       <CustomFormControl fullWidth>
         <InputLabel htmlFor="outlined-adornment-password-login">Contraseña</InputLabel>
@@ -55,15 +71,36 @@ export default function AuthLogin() {
           onChange={(event) => setPassword(event.target.value)}
           name="password"
           required
-          endAdornment={<InputAdornment position="end"><IconButton aria-label="mostrar contraseña" onClick={() => setShowPassword((value) => !value)} edge="end" size="large">{showPassword ? <Visibility /> : <VisibilityOff />}</IconButton></InputAdornment>}
+          endAdornment={
+            <InputAdornment position="end">
+              <IconButton aria-label="mostrar contraseña" onClick={() => setShowPassword((value) => !value)} edge="end" size="large">
+                {showPassword ? <Visibility /> : <VisibilityOff />}
+              </IconButton>
+            </InputAdornment>
+          }
           label="Contraseña"
         />
       </CustomFormControl>
       <Grid container sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-        <Grid><FormControlLabel control={<Checkbox checked={checked} onChange={(event) => setChecked(event.target.checked)} name="checked" color="primary" />} label="Mantener sesión" /></Grid>
-        <Grid><Typography variant="subtitle1" component={Link} to="#!" sx={{ textDecoration: 'none', color: 'secondary.main' }}>¿Olvidaste tu contraseña?</Typography></Grid>
+        <Grid>
+          <FormControlLabel
+            control={<Checkbox checked={checked} onChange={(event) => setChecked(event.target.checked)} name="checked" color="primary" />}
+            label="Mantener sesión"
+          />
+        </Grid>
+        <Grid>
+          <Typography variant="subtitle1" component={Link} to="#!" sx={{ textDecoration: 'none', color: 'secondary.main' }}>
+            ¿Olvidaste tu contraseña?
+          </Typography>
+        </Grid>
       </Grid>
-      <Box sx={{ mt: 2 }}><AnimateButton><Button color="secondary" fullWidth size="large" type="submit" variant="contained" disabled={loading}>{loading ? 'Ingresando...' : 'Ingresar'}</Button></AnimateButton></Box>
+      <Box sx={{ mt: 2 }}>
+        <AnimateButton>
+          <Button color="secondary" fullWidth size="large" type="submit" variant="contained" disabled={loading}>
+            {loading ? 'Ingresando...' : 'Ingresar'}
+          </Button>
+        </AnimateButton>
+      </Box>
     </Box>
   );
 }

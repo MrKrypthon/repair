@@ -121,10 +121,16 @@ export default function ProfileSection() {
                   <MainCard border={false} elevation={16} content={false} boxShadow shadow={theme.shadows[16]}>
                     <Box sx={{ p: 2 }}>
                       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-                        <Avatar src={user.avatarUrl || undefined} sx={{ width: 40, height: 40 }}>{!user.avatarUrl && user.name?.[0]}</Avatar>
+                        <Avatar src={user.avatarUrl || undefined} sx={{ width: 40, height: 40 }}>
+                          {!user.avatarUrl && user.name?.[0]}
+                        </Avatar>
                         <Stack>
-                          <Typography variant="h4">{greeting()}, {user.name}</Typography>
-                          <Typography variant="subtitle2" color="text.secondary">{roleLabels[user.role] || user.role}</Typography>
+                          <Typography variant="h4">
+                            {greeting()}, {user.name}
+                          </Typography>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            {roleLabels[user.role] || user.role}
+                          </Typography>
                         </Stack>
                       </Stack>
                     </Box>
@@ -132,14 +138,23 @@ export default function ProfileSection() {
                     <Box sx={{ p: 1 }}>
                       <List
                         component="nav"
-                        sx={{ width: '100%', maxWidth: 300, minWidth: 260, '& .MuiListItemButton-root': { mt: 0.5, borderRadius: `${borderRadius}px` } }}
+                        sx={{
+                          width: '100%',
+                          maxWidth: 300,
+                          minWidth: 260,
+                          '& .MuiListItemButton-root': { mt: 0.5, borderRadius: `${borderRadius}px` }
+                        }}
                       >
                         <ListItemButton onClick={goToSettings}>
-                          <ListItemIcon><IconSettings stroke={1.5} size="20px" /></ListItemIcon>
+                          <ListItemIcon>
+                            <IconSettings stroke={1.5} size="20px" />
+                          </ListItemIcon>
                           <ListItemText primary={<Typography variant="body2">Configuración</Typography>} />
                         </ListItemButton>
                         <ListItemButton onClick={logout}>
-                          <ListItemIcon><IconLogout stroke={1.5} size="20px" /></ListItemIcon>
+                          <ListItemIcon>
+                            <IconLogout stroke={1.5} size="20px" />
+                          </ListItemIcon>
                           <ListItemText primary={<Typography variant="body2">Cerrar sesión</Typography>} />
                         </ListItemButton>
                       </List>

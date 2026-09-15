@@ -9,7 +9,9 @@ const money = (value) => `$${Number(value || 0).toLocaleString('es-MX', { minimu
 
 export async function generateOrderPdf(order) {
   const trackingUrl = `${window.location.origin}/tracking/${order.publicTrackingToken}`;
-  const qrDataUrl = await QRCode.toDataURL(trackingUrl, { margin: 1, width: 200, color: { dark: '#141414', light: '#ffffff' } }).catch(() => null);
+  const qrDataUrl = await QRCode.toDataURL(trackingUrl, { margin: 1, width: 200, color: { dark: '#141414', light: '#ffffff' } }).catch(
+    () => null
+  );
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const marginX = 15;
@@ -45,8 +47,14 @@ export async function generateOrderPdf(order) {
   doc.text(order.customer.phone || '-', marginX, y);
   doc.text(order.device.category, 110, y);
   y += 5;
-  if (order.device.serialNumber) { doc.text(`N. serie: ${order.device.serialNumber}`, 110, y); y += 5; }
-  if (order.device.imei) { doc.text(`IMEI: ${order.device.imei}`, 110, y); y += 5; }
+  if (order.device.serialNumber) {
+    doc.text(`N. serie: ${order.device.serialNumber}`, 110, y);
+    y += 5;
+  }
+  if (order.device.imei) {
+    doc.text(`IMEI: ${order.device.imei}`, 110, y);
+    y += 5;
+  }
 
   y += 6;
   doc.setFont('helvetica', 'bold');
@@ -95,7 +103,11 @@ export async function generateOrderPdf(order) {
   }
   if (order.warrantyExpiresAt) {
     y += 6;
-    doc.text(`Garantía: ${order.warrantyDays} días · vigente hasta ${new Date(order.warrantyExpiresAt).toLocaleDateString('es-MX')}`, marginX, y);
+    doc.text(
+      `Garantía: ${order.warrantyDays} días · vigente hasta ${new Date(order.warrantyExpiresAt).toLocaleDateString('es-MX')}`,
+      marginX,
+      y
+    );
   }
 
   y += 12;

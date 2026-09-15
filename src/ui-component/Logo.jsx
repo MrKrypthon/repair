@@ -18,8 +18,12 @@ export default function Logo() {
         <circle cx="26" cy="6" r="4.2" fill={theme.vars.palette.secondary.main} />
       </Box>
       <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: -0.5, lineHeight: 1, whiteSpace: 'nowrap' }}>
-        <Box component="span" sx={{ color: 'text.primary' }}>Fix</Box>
-        <Box component="span" sx={{ color: 'primary.main' }}>Track</Box>
+        <Box component="span" sx={{ color: 'text.primary' }}>
+          Fix
+        </Box>
+        <Box component="span" sx={{ color: 'primary.main' }}>
+          Track
+        </Box>
       </Typography>
     </Stack>
   );

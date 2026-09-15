@@ -43,7 +43,14 @@ export default function TechnicianProductivity() {
     if (!isAdmin) return;
     setLoading(true);
     const { from, to } = periodRange(period);
-    api.getTechnicianReport(from, to).then((data) => { setRows(data); setError(''); }).catch(() => setError('No se pudo cargar el reporte de productividad.')).finally(() => setLoading(false));
+    api
+      .getTechnicianReport(from, to)
+      .then((data) => {
+        setRows(data);
+        setError('');
+      })
+      .catch(() => setError('No se pudo cargar el reporte de productividad.'))
+      .finally(() => setLoading(false));
   }, [period, isAdmin]);
 
   const chartOptions = useMemo(() => {
@@ -56,7 +63,12 @@ export default function TechnicianProductivity() {
       colors: [primary],
       dataLabels: { enabled: false },
       grid: { borderColor: gridColor, strokeDashArray: 4 },
-      xaxis: { categories: rows?.map((row) => row.name) || [], labels: { style: { colors: textMuted } }, axisBorder: { show: false }, axisTicks: { show: false } },
+      xaxis: {
+        categories: rows?.map((row) => row.name) || [],
+        labels: { style: { colors: textMuted } },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+      },
       yaxis: { labels: { style: { colors: textMuted } }, allowDecimals: false },
       tooltip: { theme: theme.palette.mode }
     };
@@ -71,7 +83,9 @@ export default function TechnicianProductivity() {
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
         <Box>
           <Typography variant="h2">Productividad por técnico</Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>Órdenes cerradas, tiempo promedio de reparación y ganancia generada.</Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Órdenes cerradas, tiempo promedio de reparación y ganancia generada.
+          </Typography>
         </Box>
         <ToggleButtonGroup exclusive size="small" value={period} onChange={(event, value) => value && setPeriod(value)}>
           <ToggleButton value="month">Este mes</ToggleButton>
@@ -83,7 +97,9 @@ export default function TechnicianProductivity() {
       {error && <Alert severity="warning">{error}</Alert>}
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
       ) : !rows || rows.length === 0 ? (
         <MainCard>
           <Stack spacing={1.5} sx={{ alignItems: 'center', py: 4 }}>
@@ -116,16 +132,31 @@ export default function TechnicianProductivity() {
                       <TableCell>
                         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                           <Avatar sx={{ bgcolor: 'primary.lighter', color: 'primary.main', width: 32, height: 32, fontSize: '0.85rem' }}>
-                            {row.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}
+                            {row.name
+                              .split(' ')
+                              .map((part) => part[0])
+                              .slice(0, 2)
+                              .join('')}
                           </Avatar>
                           <Typography fontWeight={600}>{row.name}</Typography>
                         </Stack>
                       </TableCell>
                       <TableCell align="right">{row.closedOrders}</TableCell>
-                      <TableCell align="right"><Chip label={row.activeOrders} size="small" color={row.activeOrders > 0 ? 'primary' : 'default'} variant="outlined" /></TableCell>
+                      <TableCell align="right">
+                        <Chip
+                          label={row.activeOrders}
+                          size="small"
+                          color={row.activeOrders > 0 ? 'primary' : 'default'}
+                          variant="outlined"
+                        />
+                      </TableCell>
                       <TableCell align="right">{row.closedOrders > 0 ? `${row.avgRepairDays.toFixed(1)} días` : '—'}</TableCell>
                       <TableCell align="right">{money(row.revenue)}</TableCell>
-                      <TableCell align="right"><Typography fontWeight={600} color={row.profit >= 0 ? 'success.dark' : 'error.main'}>{money(row.profit)}</Typography></TableCell>
+                      <TableCell align="right">
+                        <Typography fontWeight={600} color={row.profit >= 0 ? 'success.dark' : 'error.main'}>
+                          {money(row.profit)}
+                        </Typography>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

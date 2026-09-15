@@ -54,7 +54,12 @@ export function generateQuotationPdf(quotation) {
   if (quotation.validUntil) {
     rightY += 6;
     doc.setTextColor(...(isExpired ? [198, 40, 40] : [20, 20, 20]));
-    doc.text(`Válida hasta: ${new Date(quotation.validUntil).toLocaleDateString('es-MX')}${isExpired ? ' (VENCIDA)' : ''}`, PAGE_WIDTH - MARGIN_X, rightY, { align: 'right' });
+    doc.text(
+      `Válida hasta: ${new Date(quotation.validUntil).toLocaleDateString('es-MX')}${isExpired ? ' (VENCIDA)' : ''}`,
+      PAGE_WIDTH - MARGIN_X,
+      rightY,
+      { align: 'right' }
+    );
     doc.setTextColor(20, 20, 20);
   }
 

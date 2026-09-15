@@ -24,12 +24,72 @@ export default function NewCustomer() {
     event.preventDefault();
     setSaving(true);
     setError('');
-    api.createCustomer(form).then(() => navigate('/customers')).catch(() => setError('No se pudo guardar el cliente. Verifica la conexión con el backend.')).finally(() => setSaving(false));
+    api
+      .createCustomer(form)
+      .then(() => navigate('/customers'))
+      .catch(() => setError('No se pudo guardar el cliente. Verifica la conexión con el backend.'))
+      .finally(() => setSaving(false));
   };
 
-  return <Stack spacing={3}><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Button component={Link} to="/customers" startIcon={<ArrowBackRoundedIcon />}>Clientes</Button><Typography color="text.secondary">/ Nuevo cliente</Typography></Stack><BoxHeader /><MainCard title="Datos del cliente">{error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}<Stack component="form" spacing={3} onSubmit={submit}><Grid container spacing={2.5}><Grid size={{ xs: 12, md: 6 }}><TextField required fullWidth label="Nombre completo" value={form.name} onChange={update('name')} /></Grid><Grid size={{ xs: 12, md: 6 }}><TextField required fullWidth label="Teléfono" value={form.phone} onChange={update('phone')} /></Grid><Grid size={{ xs: 12, md: 6 }}><TextField type="email" fullWidth label="Correo electrónico (opcional)" value={form.email} onChange={update('email')} /></Grid><Grid size={12}><TextField fullWidth multiline minRows={4} label="Notas" placeholder="Preferencias, información adicional o avisos del cliente..." value={form.notes} onChange={update('notes')} /></Grid></Grid><Stack direction="row" spacing={1.5} sx={{ justifyContent: 'flex-end' }}><Button component={Link} to="/customers">Cancelar</Button><Button type="submit" variant="contained" startIcon={<SaveRoundedIcon />} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cliente'}</Button></Stack></Stack></MainCard></Stack>;
+  return (
+    <Stack spacing={3}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        <Button component={Link} to="/customers" startIcon={<ArrowBackRoundedIcon />}>
+          Clientes
+        </Button>
+        <Typography color="text.secondary">/ Nuevo cliente</Typography>
+      </Stack>
+      <BoxHeader />
+      <MainCard title="Datos del cliente">
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+        <Stack component="form" spacing={3} onSubmit={submit}>
+          <Grid container spacing={2.5}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField required fullWidth label="Nombre completo" value={form.name} onChange={update('name')} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField required fullWidth label="Teléfono" value={form.phone} onChange={update('phone')} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField type="email" fullWidth label="Correo electrónico (opcional)" value={form.email} onChange={update('email')} />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                label="Notas"
+                placeholder="Preferencias, información adicional o avisos del cliente..."
+                value={form.notes}
+                onChange={update('notes')}
+              />
+            </Grid>
+          </Grid>
+          <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'flex-end' }}>
+            <Button component={Link} to="/customers">
+              Cancelar
+            </Button>
+            <Button type="submit" variant="contained" startIcon={<SaveRoundedIcon />} disabled={saving}>
+              {saving ? 'Guardando...' : 'Guardar cliente'}
+            </Button>
+          </Stack>
+        </Stack>
+      </MainCard>
+    </Stack>
+  );
 }
 
 function BoxHeader() {
-  return <Stack><Typography variant="h2">Nuevo cliente</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Registra sus datos antes de recibir un equipo.</Typography></Stack>;
+  return (
+    <Stack>
+      <Typography variant="h2">Nuevo cliente</Typography>
+      <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+        Registra sus datos antes de recibir un equipo.
+      </Typography>
+    </Stack>
+  );
 }

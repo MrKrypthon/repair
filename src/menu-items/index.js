@@ -14,7 +14,20 @@ import other from './other';
 // ==============================|| MENU ITEMS ||============================== //
 
 const menuItems = {
-  items: [dashboard, finance, operations, inventory, suppliers, purchaseOrders, appointments, technicalKnowledge, users, pages, utilities, other]
+  items: [
+    dashboard,
+    finance,
+    operations,
+    inventory,
+    suppliers,
+    purchaseOrders,
+    appointments,
+    technicalKnowledge,
+    users,
+    pages,
+    utilities,
+    other
+  ]
 };
 
 export default menuItems;

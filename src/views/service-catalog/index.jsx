@@ -65,7 +65,12 @@ export default function ServiceCatalog() {
     event.preventDefault();
     setSaving(true);
     setError('');
-    const payload = { name: form.name, description: form.description || undefined, cost: Number(form.cost || 0), price: Number(form.price) };
+    const payload = {
+      name: form.name,
+      description: form.description || undefined,
+      cost: Number(form.cost || 0),
+      price: Number(form.price)
+    };
     const request = editingId ? api.updateServiceCatalogItem(editingId, payload) : api.createServiceCatalogItem(payload);
     request
       .then(() => {
@@ -77,7 +82,10 @@ export default function ServiceCatalog() {
   };
 
   const toggleActive = (item) => {
-    api.archiveServiceCatalogItem(item.id, !item.active).then(load).catch(() => setError('No se pudo actualizar el servicio.'));
+    api
+      .archiveServiceCatalogItem(item.id, !item.active)
+      .then(load)
+      .catch(() => setError('No se pudo actualizar el servicio.'));
   };
 
   return (
@@ -99,7 +107,10 @@ export default function ServiceCatalog() {
       <MainCard content={false}>
         <Stack direction="row" sx={{ p: 2.5, justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h4">
-            Catálogo <Typography component="span" color="text.secondary" variant="body2">({items.length})</Typography>
+            Catálogo{' '}
+            <Typography component="span" color="text.secondary" variant="body2">
+              ({items.length})
+            </Typography>
           </Typography>
           <FormControlLabel
             control={<Switch checked={showInactive} onChange={(event) => setShowInactive(event.target.checked)} />}
@@ -123,7 +134,9 @@ export default function ServiceCatalog() {
               {!loading && items.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} align="center">
-                    <Typography color="text.secondary" sx={{ py: 3 }}>Todavía no hay servicios registrados.</Typography>
+                    <Typography color="text.secondary" sx={{ py: 3 }}>
+                      Todavía no hay servicios registrados.
+                    </Typography>
                   </TableCell>
                 </TableRow>
               )}
@@ -131,15 +144,30 @@ export default function ServiceCatalog() {
                 const margin = Number(item.price) > 0 ? ((Number(item.price) - Number(item.cost)) / Number(item.price)) * 100 : 0;
                 return (
                   <TableRow hover key={item.id}>
-                    <TableCell><Typography fontWeight={600}>{item.name}</Typography></TableCell>
-                    <TableCell><Typography variant="body2" color="text.secondary">{item.description || '-'}</Typography></TableCell>
-                    <TableCell align="right">{money(item.cost)}</TableCell>
-                    <TableCell align="right"><Typography fontWeight={600}>{money(item.price)}</Typography></TableCell>
-                    <TableCell align="right">
-                      <Typography variant="body2" color={margin >= 0 ? 'success.dark' : 'error.main'}>{margin.toFixed(0)}%</Typography>
+                    <TableCell>
+                      <Typography fontWeight={600}>{item.name}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip label={item.active ? 'Activo' : 'Inactivo'} size="small" color={item.active ? 'success' : 'default'} variant="outlined" />
+                      <Typography variant="body2" color="text.secondary">
+                        {item.description || '-'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">{money(item.cost)}</TableCell>
+                    <TableCell align="right">
+                      <Typography fontWeight={600}>{money(item.price)}</Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="body2" color={margin >= 0 ? 'success.dark' : 'error.main'}>
+                        {margin.toFixed(0)}%
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={item.active ? 'Activo' : 'Inactivo'}
+                        size="small"
+                        color={item.active ? 'success' : 'default'}
+                        variant="outlined"
+                      />
                     </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => openEdit(item)} title="Editar">
@@ -162,11 +190,41 @@ export default function ServiceCatalog() {
         <Stack component="form" onSubmit={save}>
           <DialogContent>
             <Stack spacing={2} sx={{ pt: 1 }}>
-              <TextField required fullWidth label="Nombre" placeholder="Ej. Cambio de pantalla (mano de obra)" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-              <TextField fullWidth multiline minRows={2} label="Descripción (opcional)" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+              <TextField
+                required
+                fullWidth
+                label="Nombre"
+                placeholder="Ej. Cambio de pantalla (mano de obra)"
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+              />
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                label="Descripción (opcional)"
+                value={form.description}
+                onChange={(event) => setForm({ ...form, description: event.target.value })}
+              />
               <Stack direction="row" spacing={2}>
-                <TextField fullWidth type="number" label="Costo interno (opcional)" helperText="Lo que te cuesta dar el servicio, si aplica" value={form.cost} onChange={(event) => setForm({ ...form, cost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} />
-                <TextField required fullWidth type="number" label="Precio al cliente" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} inputProps={{ min: 0, step: '0.01' }} />
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Costo interno (opcional)"
+                  helperText="Lo que te cuesta dar el servicio, si aplica"
+                  value={form.cost}
+                  onChange={(event) => setForm({ ...form, cost: event.target.value })}
+                  inputProps={{ min: 0, step: '0.01' }}
+                />
+                <TextField
+                  required
+                  fullWidth
+                  type="number"
+                  label="Precio al cliente"
+                  value={form.price}
+                  onChange={(event) => setForm({ ...form, price: event.target.value })}
+                  inputProps={{ min: 0, step: '0.01' }}
+                />
               </Stack>
             </Stack>
           </DialogContent>

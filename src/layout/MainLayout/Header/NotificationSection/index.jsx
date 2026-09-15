@@ -56,7 +56,12 @@ export default function NotificationSection() {
   const [value, setValue] = useState('');
   const [notifications, setNotifications] = useState([]);
 
-  useEffect(() => { api.listNotifications().then(setNotifications).catch(() => {}); }, []);
+  useEffect(() => {
+    api
+      .listNotifications()
+      .then(setNotifications)
+      .catch(() => {});
+  }, []);
 
   /**
    * anchorRef is used on different componets and specifying one type leads to other components throwing an error
@@ -129,7 +134,12 @@ export default function NotificationSection() {
                       <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', pt: 2, px: 2 }}>
                         <Stack direction="row" sx={{ gap: 2 }}>
                           <Typography variant="subtitle1">All Notification</Typography>
-                          <Chip size="small" label={notifications.filter((item) => !item.read).length} variant="filled" sx={{ color: 'background.default', bgcolor: 'warning.dark' }} />
+                          <Chip
+                            size="small"
+                            label={notifications.filter((item) => !item.read).length}
+                            variant="filled"
+                            sx={{ color: 'background.default', bgcolor: 'warning.dark' }}
+                          />
                         </Stack>
                         <Typography component={Link} to="#" variant="subtitle2" sx={{ color: 'primary.main' }}>
                           Mark as all read
@@ -153,7 +163,16 @@ export default function NotificationSection() {
                           </TextField>
                         </Box>
                         <Divider sx={{ mt: 2 }} />
-                         <NotificationList notifications={notifications} onRead={(id) => api.markNotificationRead(id).then(() => setNotifications((items) => items.map((item) => item.id === id ? { ...item, read: true } : item)))} />
+                        <NotificationList
+                          notifications={notifications}
+                          onRead={(id) =>
+                            api
+                              .markNotificationRead(id)
+                              .then(() =>
+                                setNotifications((items) => items.map((item) => (item.id === id ? { ...item, read: true } : item)))
+                              )
+                          }
+                        />
                       </Box>
                     </Stack>
                     <CardActions sx={{ p: 1.25, justifyContent: 'center' }}>

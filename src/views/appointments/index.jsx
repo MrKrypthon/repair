@@ -53,20 +53,53 @@ export default function Appointments() {
     WORK: theme.palette.warning.main
   };
 
-  const loadEvents = () => api.listAppointments().then(setEvents).catch(() => setError('No se pudo conectar con la API. Mostrando agenda de ejemplo.')).finally(() => setLoading(false));
-  useEffect(() => { loadEvents(); }, []);
-  useEffect(() => { api.listCustomers().then(setCustomers).catch(() => {}); }, []);
+  const loadEvents = () =>
+    api
+      .listAppointments()
+      .then(setEvents)
+      .catch(() => setError('No se pudo conectar con la API. Mostrando agenda de ejemplo.'))
+      .finally(() => setLoading(false));
+  useEffect(() => {
+    loadEvents();
+  }, []);
+  useEffect(() => {
+    api
+      .listCustomers()
+      .then(setCustomers)
+      .catch(() => {});
+  }, []);
 
   const suggestedTitle = (type, customerId) => {
     const customer = customers.find((item) => item.id === customerId);
     return customer ? `${typeLabel[type]} · ${customer.name}` : typeLabel[type];
   };
-  const applyType = (type) => setForm((current) => ({ ...current, type, ...(current.title === '' || current.title === suggestedTitle(current.type, current.customerId) ? { title: suggestedTitle(type, current.customerId) } : {}) }));
-  const applyCustomer = (customerId) => setForm((current) => ({ ...current, customerId, ...(current.title === '' || current.title === suggestedTitle(current.type, current.customerId) ? { title: suggestedTitle(current.type, customerId) } : {}) }));
+  const applyType = (type) =>
+    setForm((current) => ({
+      ...current,
+      type,
+      ...(current.title === '' || current.title === suggestedTitle(current.type, current.customerId)
+        ? { title: suggestedTitle(type, current.customerId) }
+        : {})
+    }));
+  const applyCustomer = (customerId) =>
+    setForm((current) => ({
+      ...current,
+      customerId,
+      ...(current.title === '' || current.title === suggestedTitle(current.type, current.customerId)
+        ? { title: suggestedTitle(current.type, customerId) }
+        : {})
+    }));
 
   const createEvent = (event) => {
     event.preventDefault();
-    api.createAppointment(form).then(() => { setSaved(true); setForm({ title: '', type: 'APPOINTMENT', startsAt: '', endsAt: '', notes: '', customerId: '' }); return loadEvents(); }).catch(() => setError('No se pudo crear el evento.'));
+    api
+      .createAppointment(form)
+      .then(() => {
+        setSaved(true);
+        setForm({ title: '', type: 'APPOINTMENT', startsAt: '', endsAt: '', notes: '', customerId: '' });
+        return loadEvents();
+      })
+      .catch(() => setError('No se pudo crear el evento.'));
   };
 
   const handleDateSelect = (selection) => {
@@ -83,7 +116,14 @@ export default function Appointments() {
 
   const changeStatus = (status) => {
     setUpdatingStatus(true);
-    api.updateAppointmentStatus(selectedEvent.id, status).then(() => { setSelectedEvent(null); return loadEvents(); }).catch(() => setError('No se pudo actualizar el evento.')).finally(() => setUpdatingStatus(false));
+    api
+      .updateAppointmentStatus(selectedEvent.id, status)
+      .then(() => {
+        setSelectedEvent(null);
+        return loadEvents();
+      })
+      .catch(() => setError('No se pudo actualizar el evento.'))
+      .finally(() => setUpdatingStatus(false));
   };
 
   const calendarEvents = events.map((item) => ({
@@ -100,7 +140,9 @@ export default function Appointments() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h2">Agenda</Typography>
-        <Typography color="text.secondary" sx={{ mt: 0.5 }}>Recepciones, entregas, citas y trabajos programados.</Typography>
+        <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+          Recepciones, entregas, citas y trabajos programados.
+        </Typography>
       </Box>
       {error && <Alert severity="warning">{error}</Alert>}
       {saved && <Alert severity="success">Evento creado correctamente.</Alert>}
@@ -115,17 +157,25 @@ export default function Appointments() {
         <Grid size={{ xs: 12, lg: 8 }}>
           <MainCard>
             {loading ? (
-              <Box sx={{ textAlign: 'center', py: 6 }}><CircularProgress /></Box>
+              <Box sx={{ textAlign: 'center', py: 6 }}>
+                <CircularProgress />
+              </Box>
             ) : (
               <Box
                 sx={{
                   '& .fc': { fontFamily: theme.typography.fontFamily },
                   '& .fc-toolbar-title': { fontSize: '1.15rem', fontWeight: 600 },
-                  '& .fc-button': { backgroundColor: theme.palette.primary.main, borderColor: theme.palette.primary.main, textTransform: 'capitalize' },
+                  '& .fc-button': {
+                    backgroundColor: theme.palette.primary.main,
+                    borderColor: theme.palette.primary.main,
+                    textTransform: 'capitalize'
+                  },
                   '& .fc-button:hover': { backgroundColor: theme.palette.primary.dark },
                   '& .fc-button-active': { backgroundColor: `${theme.palette.primary.dark} !important` },
                   '& .fc-event-cancelled': { opacity: 0.5, textDecoration: 'line-through' },
-                  '& .fc-daygrid-day.fc-day-today, & .fc-timegrid-col.fc-day-today': { backgroundColor: theme.palette.primary.lighter || 'rgba(33,150,243,0.08)' }
+                  '& .fc-daygrid-day.fc-day-today, & .fc-timegrid-col.fc-day-today': {
+                    backgroundColor: theme.palette.primary.lighter || 'rgba(33,150,243,0.08)'
+                  }
                 }}
               >
                 <FullCalendar
@@ -153,17 +203,62 @@ export default function Appointments() {
                 <MenuItem value="APPOINTMENT">Cita</MenuItem>
                 <MenuItem value="WORK">Trabajo</MenuItem>
               </TextField>
-              <TextField select fullWidth label="Cliente (opcional)" value={form.customerId || searchParams.get('customerId') || ''} onChange={(event) => applyCustomer(event.target.value)}>
+              <TextField
+                select
+                fullWidth
+                label="Cliente (opcional)"
+                value={form.customerId || searchParams.get('customerId') || ''}
+                onChange={(event) => applyCustomer(event.target.value)}
+              >
                 <MenuItem value="">Sin asociar</MenuItem>
-                {customers.map((customer) => <MenuItem key={customer.id} value={customer.id}>{customer.name}</MenuItem>)}
+                {customers.map((customer) => (
+                  <MenuItem key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </MenuItem>
+                ))}
               </TextField>
-              <TextField required fullWidth label="Título" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Ej. Entrega iPhone 12" helperText="Se sugiere solo según el tipo y cliente; puedes editarlo." />
-              <TextField required fullWidth type="datetime-local" label="Inicio" InputLabelProps={{ shrink: true }} value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} />
-              <TextField required fullWidth type="datetime-local" label="Fin" InputLabelProps={{ shrink: true }} value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} />
-              <TextField fullWidth multiline minRows={2} label="Notas" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+              <TextField
+                required
+                fullWidth
+                label="Título"
+                value={form.title}
+                onChange={(event) => setForm({ ...form, title: event.target.value })}
+                placeholder="Ej. Entrega iPhone 12"
+                helperText="Se sugiere solo según el tipo y cliente; puedes editarlo."
+              />
+              <TextField
+                required
+                fullWidth
+                type="datetime-local"
+                label="Inicio"
+                InputLabelProps={{ shrink: true }}
+                value={form.startsAt}
+                onChange={(event) => setForm({ ...form, startsAt: event.target.value })}
+              />
+              <TextField
+                required
+                fullWidth
+                type="datetime-local"
+                label="Fin"
+                InputLabelProps={{ shrink: true }}
+                value={form.endsAt}
+                onChange={(event) => setForm({ ...form, endsAt: event.target.value })}
+              />
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                label="Notas"
+                value={form.notes}
+                onChange={(event) => setForm({ ...form, notes: event.target.value })}
+              />
               <Divider />
-              <Button type="submit" variant="contained" startIcon={<EventAvailableRoundedIcon />}>Guardar evento</Button>
-              <Typography variant="caption" color="text.secondary">Tip: selecciona un rango en el calendario para prellenar la fecha.</Typography>
+              <Button type="submit" variant="contained" startIcon={<EventAvailableRoundedIcon />}>
+                Guardar evento
+              </Button>
+              <Typography variant="caption" color="text.secondary">
+                Tip: selecciona un rango en el calendario para prellenar la fecha.
+              </Typography>
             </Stack>
           </MainCard>
         </Grid>
@@ -176,23 +271,47 @@ export default function Appointments() {
             <DialogContent>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1}>
-                  <Chip label={typeLabel[selectedEvent.type] || selectedEvent.type} size="small" sx={{ bgcolor: typeColors[selectedEvent.type], color: '#fff' }} />
+                  <Chip
+                    label={typeLabel[selectedEvent.type] || selectedEvent.type}
+                    size="small"
+                    sx={{ bgcolor: typeColors[selectedEvent.type], color: '#fff' }}
+                  />
                   <Chip label={statusLabel[selectedEvent.status] || selectedEvent.status} size="small" variant="outlined" />
                 </Stack>
                 <Typography variant="body2" color="text.secondary">
-                  {new Date(selectedEvent.startsAt).toLocaleString('es-MX')} — {new Date(selectedEvent.endsAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(selectedEvent.startsAt).toLocaleString('es-MX')} —{' '}
+                  {new Date(selectedEvent.endsAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                 </Typography>
                 {selectedEvent.customer && <Typography variant="body2">Cliente: {selectedEvent.customer.name}</Typography>}
                 {selectedEvent.serviceOrder && <Typography variant="body2">Orden: {selectedEvent.serviceOrder.folio}</Typography>}
-                {selectedEvent.notes && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{selectedEvent.notes}</Typography>}
+                {selectedEvent.notes && (
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {selectedEvent.notes}
+                  </Typography>
+                )}
               </Stack>
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
               {selectedEvent.status === 'SCHEDULED' && (
                 <>
-                  <Button color="error" startIcon={<CancelRoundedIcon />} onClick={() => changeStatus('CANCELLED')} disabled={updatingStatus}>Cancelar</Button>
-                  <Button variant="contained" color="success" startIcon={<CheckCircleRoundedIcon />} onClick={() => changeStatus('COMPLETED')} disabled={updatingStatus}>Completar</Button>
+                  <Button
+                    color="error"
+                    startIcon={<CancelRoundedIcon />}
+                    onClick={() => changeStatus('CANCELLED')}
+                    disabled={updatingStatus}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<CheckCircleRoundedIcon />}
+                    onClick={() => changeStatus('COMPLETED')}
+                    disabled={updatingStatus}
+                  >
+                    Completar
+                  </Button>
                 </>
               )}
             </DialogActions>

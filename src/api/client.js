@@ -66,7 +66,8 @@ export const api = {
   removeInventoryImage: (id) => request(`/inventory/${id}/image`, { method: 'DELETE' }),
   addOrderPart: (folio, data) => request(`/service-orders/${folio}/parts`, { method: 'POST', body: JSON.stringify(data) }),
   updateDiagnosis: (folio, data) => request(`/service-orders/${folio}/diagnosis`, { method: 'PATCH', body: JSON.stringify(data) }),
-  assignTechnician: (folio, technicianId) => request(`/service-orders/${folio}/technician`, { method: 'PATCH', body: JSON.stringify({ technicianId: technicianId || undefined }) }),
+  assignTechnician: (folio, technicianId) =>
+    request(`/service-orders/${folio}/technician`, { method: 'PATCH', body: JSON.stringify({ technicianId: technicianId || undefined }) }),
   deliverServiceOrder: (folio, data) => request(`/service-orders/${folio}/deliver`, { method: 'POST', body: JSON.stringify(data) }),
   createWarrantyClaim: (folio, data) => request(`/service-orders/${folio}/warranty-claim`, { method: 'POST', body: JSON.stringify(data) }),
   addTechnicalNote: (folio, data) => request(`/service-orders/${folio}/notes`, { method: 'POST', body: JSON.stringify(data) }),
@@ -77,7 +78,8 @@ export const api = {
   },
   deleteOrderAttachment: (folio, attachmentId) => request(`/service-orders/${folio}/attachments/${attachmentId}`, { method: 'DELETE' }),
   publicTracking: (token) => request(`/public/tracking/${token}`),
-  publicBudget: (token, budgetStatus) => request(`/public/tracking/${token}/budget`, { method: 'PATCH', body: JSON.stringify({ budgetStatus }) }),
+  publicBudget: (token, budgetStatus) =>
+    request(`/public/tracking/${token}/budget`, { method: 'PATCH', body: JSON.stringify({ budgetStatus }) }),
   listNotifications: () => request('/notifications'),
   listUsers: () => request('/users'),
   createUser: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
@@ -92,7 +94,8 @@ export const api = {
   },
   createServiceCatalogItem: (data) => request('/service-catalog', { method: 'POST', body: JSON.stringify(data) }),
   updateServiceCatalogItem: (id, data) => request(`/service-catalog/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  archiveServiceCatalogItem: (id, active) => request(`/service-catalog/${id}/archive`, { method: 'PATCH', body: JSON.stringify({ active }) }),
+  archiveServiceCatalogItem: (id, active) =>
+    request(`/service-catalog/${id}/archive`, { method: 'PATCH', body: JSON.stringify({ active }) }),
   listPurchaseOrders: () => request('/purchase-orders'),
   createPurchaseOrder: (data) => request('/purchase-orders', { method: 'POST', body: JSON.stringify(data) }),
   receivePurchaseOrder: (id) => request(`/purchase-orders/${id}/receive`, { method: 'PATCH' }),

@@ -36,7 +36,11 @@ export default function FontFamily() {
           {fonts.map((item) => (
             <Grid key={item.id} size={{ xs: 12, sm: 4 }}>
               <MainCard content={false} sx={{ p: 0.75, bgcolor: fontFamily === item.value ? 'primary.light' : 'grey.50' }}>
-                <MainCard content={false} border sx={{ p: 1.75, borderWidth: 1, ...(fontFamily === item.value && { borderColor: 'primary.main' }) }}>
+                <MainCard
+                  content={false}
+                  border
+                  sx={{ p: 1.75, borderWidth: 1, ...(fontFamily === item.value && { borderColor: 'primary.main' }) }}
+                >
                   <FormControlLabel
                     sx={{ width: 1 }}
                     control={<Radio value={item.value} sx={{ display: 'none' }} />}

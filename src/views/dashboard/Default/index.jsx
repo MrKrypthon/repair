@@ -31,24 +31,91 @@ import { gridSpacing } from 'store/constant';
 import { api } from 'api/client';
 
 const orders = [
-  { folio: 'OS-1048', device: 'iPhone 12 · Pantalla', customer: 'María González', status: 'En reparación', tone: 'primary', date: 'Hoy, 09:32' },
-  { folio: 'OS-1047', device: 'Samsung A52 · Carga', customer: 'Carlos Ramírez', status: 'Esperando pieza', tone: 'warning', date: 'Ayer, 16:10' },
-  { folio: 'OS-1046', device: 'MacBook Air · No enciende', customer: 'Lucía Torres', status: 'En diagnóstico', tone: 'info', date: 'Ayer, 14:45' },
-  { folio: 'OS-1045', device: 'Nintendo Switch · HDMI', customer: 'Diego Herrera', status: 'Listo para entrega', tone: 'success', date: 'Ayer, 11:20' }
+  {
+    folio: 'OS-1048',
+    device: 'iPhone 12 · Pantalla',
+    customer: 'María González',
+    status: 'En reparación',
+    tone: 'primary',
+    date: 'Hoy, 09:32'
+  },
+  {
+    folio: 'OS-1047',
+    device: 'Samsung A52 · Carga',
+    customer: 'Carlos Ramírez',
+    status: 'Esperando pieza',
+    tone: 'warning',
+    date: 'Ayer, 16:10'
+  },
+  {
+    folio: 'OS-1046',
+    device: 'MacBook Air · No enciende',
+    customer: 'Lucía Torres',
+    status: 'En diagnóstico',
+    tone: 'info',
+    date: 'Ayer, 14:45'
+  },
+  {
+    folio: 'OS-1045',
+    device: 'Nintendo Switch · HDMI',
+    customer: 'Diego Herrera',
+    status: 'Listo para entrega',
+    tone: 'success',
+    date: 'Ayer, 11:20'
+  }
 ];
 
 const IN_REPAIR_STATUSES = 'EN_REPARACION,EN_PRUEBAS,EN_DIAGNOSTICO';
 
 function buildFallbackMetrics(isAdmin) {
   return [
-    { label: 'En reparación', value: '18', detail: '+3 esta semana', icon: BuildRoundedIcon, color: 'primary.main', bg: 'primary.lighter', to: `/service-orders?status=${IN_REPAIR_STATUSES}` },
-    { label: 'Listos para entregar', value: '7', detail: '2 desde ayer', icon: CheckCircleRoundedIcon, color: 'success.dark', bg: 'success.lighter', to: '/service-orders?status=LISTO_ENTREGA' },
-    { label: 'Cobros pendientes', value: '$18,450', detail: '5 órdenes', icon: PaymentsRoundedIcon, color: 'warning.dark', bg: 'warning.lighter', to: isAdmin ? '/finance' : undefined },
-    { label: 'Órdenes atrasadas', value: '3', detail: 'Requieren atención', icon: WarningAmberRoundedIcon, color: 'error.main', bg: 'error.lighter', to: '/service-orders?overdue=1' }
+    {
+      label: 'En reparación',
+      value: '18',
+      detail: '+3 esta semana',
+      icon: BuildRoundedIcon,
+      color: 'primary.main',
+      bg: 'primary.lighter',
+      to: `/service-orders?status=${IN_REPAIR_STATUSES}`
+    },
+    {
+      label: 'Listos para entregar',
+      value: '7',
+      detail: '2 desde ayer',
+      icon: CheckCircleRoundedIcon,
+      color: 'success.dark',
+      bg: 'success.lighter',
+      to: '/service-orders?status=LISTO_ENTREGA'
+    },
+    {
+      label: 'Cobros pendientes',
+      value: '$18,450',
+      detail: '5 órdenes',
+      icon: PaymentsRoundedIcon,
+      color: 'warning.dark',
+      bg: 'warning.lighter',
+      to: isAdmin ? '/finance' : undefined
+    },
+    {
+      label: 'Órdenes atrasadas',
+      value: '3',
+      detail: 'Requieren atención',
+      icon: WarningAmberRoundedIcon,
+      color: 'error.main',
+      bg: 'error.lighter',
+      to: '/service-orders?overdue=1'
+    }
   ];
 }
 
-const categoryLabels = { CELULAR: 'celular', TABLET: 'tablet', LAPTOP: 'laptop', CONSOLA: 'consola', TARJETA_ELECTRONICA: 'tarjeta electrónica', OTRO: 'otro' };
+const categoryLabels = {
+  CELULAR: 'celular',
+  TABLET: 'tablet',
+  LAPTOP: 'laptop',
+  CONSOLA: 'consola',
+  TARJETA_ELECTRONICA: 'tarjeta electrónica',
+  OTRO: 'otro'
+};
 
 function formatTodayLabel() {
   const label = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -56,7 +123,17 @@ function formatTodayLabel() {
 }
 
 const statusPresentation = {
-  RECIBIDO: ['Recibido', 'default'], ESPERA_DIAGNOSTICO: ['En espera de diagnóstico', 'info'], EN_DIAGNOSTICO: ['En diagnóstico', 'info'], ESPERA_AUTORIZACION: ['Esperando autorización', 'secondary'], ESPERA_PIEZA: ['Esperando pieza', 'warning'], EN_REPARACION: ['En reparación', 'primary'], EN_PRUEBAS: ['En pruebas', 'primary'], LISTO_ENTREGA: ['Listo para entrega', 'success'], ENTREGADO: ['Entregado', 'success'], CANCELADO: ['Cancelado', 'error'], SIN_REPARACION: ['Sin reparación', 'error']
+  RECIBIDO: ['Recibido', 'default'],
+  ESPERA_DIAGNOSTICO: ['En espera de diagnóstico', 'info'],
+  EN_DIAGNOSTICO: ['En diagnóstico', 'info'],
+  ESPERA_AUTORIZACION: ['Esperando autorización', 'secondary'],
+  ESPERA_PIEZA: ['Esperando pieza', 'warning'],
+  EN_REPARACION: ['En reparación', 'primary'],
+  EN_PRUEBAS: ['En pruebas', 'primary'],
+  LISTO_ENTREGA: ['Listo para entrega', 'success'],
+  ENTREGADO: ['Entregado', 'success'],
+  CANCELADO: ['Cancelado', 'error'],
+  SIN_REPARACION: ['Sin reparación', 'error']
 };
 
 function MetricCard({ metric }) {
@@ -69,9 +146,15 @@ function MetricCard({ metric }) {
           <Icon />
         </Avatar>
         <Box>
-          <Typography variant="body2" color="text.secondary">{metric.label}</Typography>
-          <Typography variant="h2" sx={{ my: 0.5, color: 'text.primary' }}>{metric.value}</Typography>
-          <Typography variant="caption" color={metric.color}>{metric.detail}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {metric.label}
+          </Typography>
+          <Typography variant="h2" sx={{ my: 0.5, color: 'text.primary' }}>
+            {metric.value}
+          </Typography>
+          <Typography variant="caption" color={metric.color}>
+            {metric.detail}
+          </Typography>
         </Box>
       </Stack>
     </MainCard>
@@ -89,13 +172,69 @@ function WorkshopCharts({ dashboard }) {
   const weeklyVolume = dashboard?.weeklyVolume || [];
   const statusBreakdown = dashboard?.statusBreakdown || { inRepair: 0, inDiagnosis: 0, pendingAuthorization: 0, ready: 0 };
 
-  const common = { chart: { toolbar: { show: false }, fontFamily: theme.typography.fontFamily }, dataLabels: { enabled: false }, grid: { borderColor: gridColor, strokeDashArray: 4 }, xaxis: { labels: { style: { colors: textMuted } }, axisBorder: { show: false }, axisTicks: { show: false } }, yaxis: { labels: { style: { colors: textMuted } } }, tooltip: { theme: theme.palette.mode } };
-  const volumeOptions = { ...common, chart: { ...common.chart, type: 'area' }, colors: [primary, secondary], stroke: { curve: 'smooth', width: 3 }, fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.02 } }, xaxis: { ...common.xaxis, categories: weeklyVolume.map((day) => day.label) } };
-  const volumeSeries = [{ name: 'Recibidas', data: weeklyVolume.map((day) => day.received) }, { name: 'Entregadas', data: weeklyVolume.map((day) => day.delivered) }];
-  const statusOptions = { chart: { type: 'donut', fontFamily: theme.typography.fontFamily }, labels: ['En reparación', 'Diagnóstico', 'Esperando autorización', 'Listos'], colors: [primary, secondary, '#f59e0b', success], legend: { position: 'bottom', fontSize: '12px', labels: { colors: textMuted } }, dataLabels: { enabled: false }, stroke: { colors: [theme.palette.background.paper] }, plotOptions: { pie: { donut: { size: '72%', labels: { show: true, total: { show: true, label: 'Órdenes activas', color: textMuted, formatter: () => String(statusBreakdown.inRepair + statusBreakdown.inDiagnosis + statusBreakdown.pendingAuthorization + statusBreakdown.ready) } } } } } };
+  const common = {
+    chart: { toolbar: { show: false }, fontFamily: theme.typography.fontFamily },
+    dataLabels: { enabled: false },
+    grid: { borderColor: gridColor, strokeDashArray: 4 },
+    xaxis: { labels: { style: { colors: textMuted } }, axisBorder: { show: false }, axisTicks: { show: false } },
+    yaxis: { labels: { style: { colors: textMuted } } },
+    tooltip: { theme: theme.palette.mode }
+  };
+  const volumeOptions = {
+    ...common,
+    chart: { ...common.chart, type: 'area' },
+    colors: [primary, secondary],
+    stroke: { curve: 'smooth', width: 3 },
+    fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.02 } },
+    xaxis: { ...common.xaxis, categories: weeklyVolume.map((day) => day.label) }
+  };
+  const volumeSeries = [
+    { name: 'Recibidas', data: weeklyVolume.map((day) => day.received) },
+    { name: 'Entregadas', data: weeklyVolume.map((day) => day.delivered) }
+  ];
+  const statusOptions = {
+    chart: { type: 'donut', fontFamily: theme.typography.fontFamily },
+    labels: ['En reparación', 'Diagnóstico', 'Esperando autorización', 'Listos'],
+    colors: [primary, secondary, '#f59e0b', success],
+    legend: { position: 'bottom', fontSize: '12px', labels: { colors: textMuted } },
+    dataLabels: { enabled: false },
+    stroke: { colors: [theme.palette.background.paper] },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '72%',
+          labels: {
+            show: true,
+            total: {
+              show: true,
+              label: 'Órdenes activas',
+              color: textMuted,
+              formatter: () =>
+                String(
+                  statusBreakdown.inRepair + statusBreakdown.inDiagnosis + statusBreakdown.pendingAuthorization + statusBreakdown.ready
+                )
+            }
+          }
+        }
+      }
+    }
+  };
   const statusSeries = [statusBreakdown.inRepair, statusBreakdown.inDiagnosis, statusBreakdown.pendingAuthorization, statusBreakdown.ready];
 
-  return <><Grid size={{ xs: 12, lg: 8 }}><MainCard title="Actividad del taller" secondary={<Chip label="Últimos 7 días" size="small" color="primary" variant="outlined" />}><ReactApexChart options={volumeOptions} series={volumeSeries} type="area" height={290} /></MainCard></Grid><Grid size={{ xs: 12, lg: 4 }}><MainCard title="Órdenes por estado"><ReactApexChart options={statusOptions} series={statusSeries} type="donut" height={290} /></MainCard></Grid></>;
+  return (
+    <>
+      <Grid size={{ xs: 12, lg: 8 }}>
+        <MainCard title="Actividad del taller" secondary={<Chip label="Últimos 7 días" size="small" color="primary" variant="outlined" />}>
+          <ReactApexChart options={volumeOptions} series={volumeSeries} type="area" height={290} />
+        </MainCard>
+      </Grid>
+      <Grid size={{ xs: 12, lg: 4 }}>
+        <MainCard title="Órdenes por estado">
+          <ReactApexChart options={statusOptions} series={statusSeries} type="donut" height={290} />
+        </MainCard>
+      </Grid>
+    </>
+  );
 }
 
 export default function Dashboard() {
@@ -107,34 +246,106 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   useEffect(() => {
     if (isTechnician) return;
-    api.getDashboardMetrics().then(setDashboard).catch(() => setError('Mostrando valores de ejemplo. No se pudo cargar la analítica.'));
-    api.listServiceOrders().then((records) => setRecentOrders(records.slice(0, 5).map((order) => ({ folio: order.folio, device: `${order.device.brand} · ${order.device.model}`, customer: order.customer.name, status: statusPresentation[order.status]?.[0] || order.status, tone: statusPresentation[order.status]?.[1] || 'default', date: new Date(order.updatedAt || order.receivedAt).toLocaleDateString('es-MX') })))).catch(() => {});
+    api
+      .getDashboardMetrics()
+      .then(setDashboard)
+      .catch(() => setError('Mostrando valores de ejemplo. No se pudo cargar la analítica.'));
+    api
+      .listServiceOrders()
+      .then((records) =>
+        setRecentOrders(
+          records.slice(0, 5).map((order) => ({
+            folio: order.folio,
+            device: `${order.device.brand} · ${order.device.model}`,
+            customer: order.customer.name,
+            status: statusPresentation[order.status]?.[0] || order.status,
+            tone: statusPresentation[order.status]?.[1] || 'default',
+            date: new Date(order.updatedAt || order.receivedAt).toLocaleDateString('es-MX')
+          }))
+        )
+      )
+      .catch(() => {});
   }, [isTechnician]);
 
   if (isTechnician) return <Navigate to="/service-orders" replace />;
-  const currentMetrics = dashboard ? [
-    { label: 'En reparación', value: dashboard.inRepair, detail: `${dashboard.receivedToday} recibidas hoy`, icon: BuildRoundedIcon, color: 'primary.main', bg: 'primary.lighter', to: `/service-orders?status=${IN_REPAIR_STATUSES}` },
-    { label: 'Listos para entregar', value: dashboard.ready, detail: `${dashboard.pendingAuthorization} presupuestos pendientes`, icon: CheckCircleRoundedIcon, color: 'success.dark', bg: 'success.lighter', to: '/service-orders?status=LISTO_ENTREGA' },
-    { label: 'Cobros registrados', value: `$${Number(dashboard.totalCollected).toLocaleString('es-MX')}`, detail: `${dashboard.customers} clientes`, icon: PaymentsRoundedIcon, color: 'warning.dark', bg: 'warning.lighter', to: isAdmin ? '/finance' : undefined },
-    { label: 'Ganancia estimada', value: `$${Number(dashboard.estimatedProfit).toLocaleString('es-MX')}`, detail: `Margen ${Number(dashboard.margin).toFixed(1)}%`, icon: PaymentsRoundedIcon, color: 'success.dark', bg: 'success.lighter', to: isAdmin ? '/finance' : undefined },
-    { label: 'Órdenes atrasadas', value: dashboard.overdue, detail: `${dashboard.lowStock} productos con stock bajo`, icon: WarningAmberRoundedIcon, color: 'error.main', bg: 'error.lighter', to: '/service-orders?overdue=1' }
-  ] : buildFallbackMetrics(isAdmin);
+  const currentMetrics = dashboard
+    ? [
+        {
+          label: 'En reparación',
+          value: dashboard.inRepair,
+          detail: `${dashboard.receivedToday} recibidas hoy`,
+          icon: BuildRoundedIcon,
+          color: 'primary.main',
+          bg: 'primary.lighter',
+          to: `/service-orders?status=${IN_REPAIR_STATUSES}`
+        },
+        {
+          label: 'Listos para entregar',
+          value: dashboard.ready,
+          detail: `${dashboard.pendingAuthorization} presupuestos pendientes`,
+          icon: CheckCircleRoundedIcon,
+          color: 'success.dark',
+          bg: 'success.lighter',
+          to: '/service-orders?status=LISTO_ENTREGA'
+        },
+        {
+          label: 'Cobros registrados',
+          value: `$${Number(dashboard.totalCollected).toLocaleString('es-MX')}`,
+          detail: `${dashboard.customers} clientes`,
+          icon: PaymentsRoundedIcon,
+          color: 'warning.dark',
+          bg: 'warning.lighter',
+          to: isAdmin ? '/finance' : undefined
+        },
+        {
+          label: 'Ganancia estimada',
+          value: `$${Number(dashboard.estimatedProfit).toLocaleString('es-MX')}`,
+          detail: `Margen ${Number(dashboard.margin).toFixed(1)}%`,
+          icon: PaymentsRoundedIcon,
+          color: 'success.dark',
+          bg: 'success.lighter',
+          to: isAdmin ? '/finance' : undefined
+        },
+        {
+          label: 'Órdenes atrasadas',
+          value: dashboard.overdue,
+          detail: `${dashboard.lowStock} productos con stock bajo`,
+          icon: WarningAmberRoundedIcon,
+          color: 'error.main',
+          bg: 'error.lighter',
+          to: '/service-orders?overdue=1'
+        }
+      ]
+    : buildFallbackMetrics(isAdmin);
 
   const todayReception = dashboard?.todayReception || { total: 0, byCategory: {} };
-  const todayReceptionDetail = Object.entries(todayReception.byCategory)
-    .map(([category, count]) => `${count} ${categoryLabels[category] || category.toLowerCase()}${count > 1 ? 's' : ''}`)
-    .join(' · ') || 'Sin equipos recibidos todavía';
+  const todayReceptionDetail =
+    Object.entries(todayReception.byCategory)
+      .map(([category, count]) => `${count} ${categoryLabels[category] || category.toLowerCase()}${count > 1 ? 's' : ''}`)
+      .join(' · ') || 'Sin equipos recibidos todavía';
 
   return (
     <Grid container spacing={gridSpacing}>
       <Grid size={12}>
-        {error && <Alert severity="info" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
           <Box>
             <Typography variant="h2">Resumen del taller</Typography>
-            <Typography color="text.secondary" sx={{ mt: 0.5 }}>{formatTodayLabel()}</Typography>
+            <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+              {formatTodayLabel()}
+            </Typography>
           </Box>
-          <Button component={Link} to="/service-orders/new" variant="contained" startIcon={<AddRoundedIcon />} sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}>
+          <Button
+            component={Link}
+            to="/service-orders/new"
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+            sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+          >
             Nueva orden
           </Button>
         </Stack>
@@ -151,7 +362,11 @@ export default function Dashboard() {
       <Grid size={{ xs: 12, lg: 8 }}>
         <MainCard
           title="Órdenes recientes"
-          secondary={<Button component={Link} to="/service-orders" size="small" endIcon={<ArrowForwardRoundedIcon />}>Ver todas</Button>}
+          secondary={
+            <Button component={Link} to="/service-orders" size="small" endIcon={<ArrowForwardRoundedIcon />}>
+              Ver todas
+            </Button>
+          }
         >
           <Box sx={{ overflowX: 'auto' }}>
             <Table sx={{ minWidth: 620 }}>
@@ -167,10 +382,16 @@ export default function Dashboard() {
               <TableBody>
                 {recentOrders.map((order) => (
                   <TableRow hover key={order.folio} sx={{ '&:last-child td': { border: 0 } }}>
-                    <TableCell><Typography component={Link} to={`/service-orders/${order.folio}`} color="primary" fontWeight={600}>{order.folio}</Typography></TableCell>
+                    <TableCell>
+                      <Typography component={Link} to={`/service-orders/${order.folio}`} color="primary" fontWeight={600}>
+                        {order.folio}
+                      </Typography>
+                    </TableCell>
                     <TableCell>{order.device}</TableCell>
                     <TableCell>{order.customer}</TableCell>
-                    <TableCell><Chip label={order.status} color={order.tone} size="small" variant="outlined" /></TableCell>
+                    <TableCell>
+                      <Chip label={order.status} color={order.tone} size="small" variant="outlined" />
+                    </TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{order.date}</TableCell>
                   </TableRow>
                 ))}
@@ -183,14 +404,46 @@ export default function Dashboard() {
       <Grid size={{ xs: 12, lg: 4 }}>
         <MainCard title="Acciones rápidas">
           <Stack spacing={1.25}>
-            <Button component={Link} to="/customers/new" variant="outlined" startIcon={<DevicesOtherRoundedIcon />} fullWidth sx={{ justifyContent: 'flex-start', py: 1.25 }}>Registrar cliente y equipo</Button>
-            <Button component={Link} to="/service-orders?overdue=1" variant="outlined" color={dashboard?.overdue ? 'error' : 'primary'} startIcon={<AccessTimeRoundedIcon />} fullWidth sx={{ justifyContent: 'flex-start', py: 1.25 }}>Revisar órdenes atrasadas{dashboard ? ` (${dashboard.overdue})` : ''}</Button>
-            <Button component={Link} to="/service-orders" variant="outlined" startIcon={<ListAltRoundedIcon />} fullWidth sx={{ justifyContent: 'flex-start', py: 1.25 }}>Ver todas las órdenes</Button>
+            <Button
+              component={Link}
+              to="/customers/new"
+              variant="outlined"
+              startIcon={<DevicesOtherRoundedIcon />}
+              fullWidth
+              sx={{ justifyContent: 'flex-start', py: 1.25 }}
+            >
+              Registrar cliente y equipo
+            </Button>
+            <Button
+              component={Link}
+              to="/service-orders?overdue=1"
+              variant="outlined"
+              color={dashboard?.overdue ? 'error' : 'primary'}
+              startIcon={<AccessTimeRoundedIcon />}
+              fullWidth
+              sx={{ justifyContent: 'flex-start', py: 1.25 }}
+            >
+              Revisar órdenes atrasadas{dashboard ? ` (${dashboard.overdue})` : ''}
+            </Button>
+            <Button
+              component={Link}
+              to="/service-orders"
+              variant="outlined"
+              startIcon={<ListAltRoundedIcon />}
+              fullWidth
+              sx={{ justifyContent: 'flex-start', py: 1.25 }}
+            >
+              Ver todas las órdenes
+            </Button>
           </Stack>
           <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: 'primary.lighter' }}>
             <Typography variant="subtitle1">Recepción del día</Typography>
-            <Typography variant="h3" sx={{ mt: 0.5 }}>{todayReception.total} {todayReception.total === 1 ? 'equipo' : 'equipos'}</Typography>
-            <Typography variant="body2" color="text.secondary">{todayReceptionDetail}</Typography>
+            <Typography variant="h3" sx={{ mt: 0.5 }}>
+              {todayReception.total} {todayReception.total === 1 ? 'equipo' : 'equipos'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {todayReceptionDetail}
+            </Typography>
           </Box>
         </MainCard>
       </Grid>

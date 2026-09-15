@@ -46,9 +46,17 @@ function SummaryCard({ icon: Icon, label, value, color, bg, detail, to }) {
           <Icon />
         </Avatar>
         <Box>
-          <Typography variant="body2" color="text.secondary">{label}</Typography>
-          <Typography variant="h2" sx={{ my: 0.5, color: 'text.primary' }}>{value}</Typography>
-          {detail && <Typography variant="caption" color={color}>{detail}</Typography>}
+          <Typography variant="body2" color="text.secondary">
+            {label}
+          </Typography>
+          <Typography variant="h2" sx={{ my: 0.5, color: 'text.primary' }}>
+            {value}
+          </Typography>
+          {detail && (
+            <Typography variant="caption" color={color}>
+              {detail}
+            </Typography>
+          )}
         </Box>
       </Stack>
     </MainCard>
@@ -67,7 +75,14 @@ export default function Finance() {
     if (!isAdmin) return;
     setLoading(true);
     const { from, to } = periodRange(period);
-    api.getFinanceSummary(from, to).then((data) => { setSummary(data); setError(''); }).catch(() => setError('No se pudo cargar la información financiera.')).finally(() => setLoading(false));
+    api
+      .getFinanceSummary(from, to)
+      .then((data) => {
+        setSummary(data);
+        setError('');
+      })
+      .catch(() => setError('No se pudo cargar la información financiera.'))
+      .finally(() => setLoading(false));
   }, [period, isAdmin]);
 
   const chartOptions = useMemo(() => {
@@ -81,14 +96,24 @@ export default function Finance() {
       colors: [primary, error],
       dataLabels: { enabled: false },
       grid: { borderColor: gridColor, strokeDashArray: 4 },
-      xaxis: { categories: summary?.monthly.map((m) => m.label) || [], labels: { style: { colors: textMuted } }, axisBorder: { show: false }, axisTicks: { show: false } },
+      xaxis: {
+        categories: summary?.monthly.map((m) => m.label) || [],
+        labels: { style: { colors: textMuted } },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+      },
       yaxis: { labels: { style: { colors: textMuted }, formatter: (value) => `$${Number(value).toLocaleString('es-MX')}` } },
       legend: { position: 'top', horizontalAlign: 'right', labels: { colors: textMuted } },
       tooltip: { theme: theme.palette.mode, y: { formatter: (value) => money(value) } }
     };
   }, [theme, summary]);
 
-  const chartSeries = summary ? [{ name: 'Ingresos', data: summary.monthly.map((m) => m.income) }, { name: 'Gastos', data: summary.monthly.map((m) => m.expenses) }] : [];
+  const chartSeries = summary
+    ? [
+        { name: 'Ingresos', data: summary.monthly.map((m) => m.income) },
+        { name: 'Gastos', data: summary.monthly.map((m) => m.expenses) }
+      ]
+    : [];
 
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
@@ -97,7 +122,9 @@ export default function Finance() {
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
         <Box>
           <Typography variant="h2">Finanzas</Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>Ingresos, gastos y ganancia real del taller.</Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Ingresos, gastos y ganancia real del taller.
+          </Typography>
         </Box>
         <ToggleButtonGroup exclusive size="small" value={period} onChange={(event, value) => value && setPeriod(value)}>
           <ToggleButton value="month">Este mes</ToggleButton>
@@ -109,15 +136,31 @@ export default function Finance() {
       {error && <Alert severity="warning">{error}</Alert>}
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
       ) : summary ? (
         <>
           <Grid container spacing={gridSpacing}>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <SummaryCard icon={PaymentsRoundedIcon} label="Ingresos" value={money(summary.income)} color="success.dark" bg="success.lighter" to="#movimientos" />
+              <SummaryCard
+                icon={PaymentsRoundedIcon}
+                label="Ingresos"
+                value={money(summary.income)}
+                color="success.dark"
+                bg="success.lighter"
+                to="#movimientos"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <SummaryCard icon={ShoppingCartRoundedIcon} label="Gastos (piezas / proveedores)" value={money(summary.expenses)} color="error.main" bg="error.lighter" to="/purchase-orders" />
+              <SummaryCard
+                icon={ShoppingCartRoundedIcon}
+                label="Gastos (piezas / proveedores)"
+                value={money(summary.expenses)}
+                color="error.main"
+                bg="error.lighter"
+                to="/purchase-orders"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
               <SummaryCard
@@ -133,7 +176,9 @@ export default function Finance() {
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
               <MainCard content={false} sx={{ height: '100%' }}>
                 <Stack spacing={1} sx={{ p: 2.5, alignItems: 'flex-start', justifyContent: 'center', height: '100%' }}>
-                  <Typography variant="body2" color="text.secondary">Estado del periodo</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Estado del periodo
+                  </Typography>
                   <Chip
                     icon={summary.isProfit ? <ArrowUpwardRoundedIcon /> : <ArrowDownwardRoundedIcon />}
                     label={summary.isProfit ? 'Números verdes · Ganancia' : 'Números rojos · Pérdida'}
@@ -156,7 +201,9 @@ export default function Finance() {
 
           <MainCard id="movimientos" title="Movimientos">
             {summary.movements.length === 0 ? (
-              <Typography color="text.secondary" align="center" sx={{ py: 4 }}>No hay movimientos en este periodo.</Typography>
+              <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
+                No hay movimientos en este periodo.
+              </Typography>
             ) : (
               <Box sx={{ overflowX: 'auto' }}>
                 <Table sx={{ minWidth: 640 }}>
@@ -173,8 +220,20 @@ export default function Finance() {
                       <TableRow hover key={movement.id} sx={{ '&:last-child td': { border: 0 } }}>
                         <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(movement.date).toLocaleString('es-MX')}</TableCell>
                         <TableCell>{movement.description}</TableCell>
-                        <TableCell><Chip label={movement.type === 'INCOME' ? 'Ingreso' : 'Egreso'} color={movement.type === 'INCOME' ? 'success' : 'error'} size="small" variant="outlined" /></TableCell>
-                        <TableCell align="right"><Typography fontWeight={600} color={movement.type === 'INCOME' ? 'success.dark' : 'error.main'}>{movement.type === 'INCOME' ? '+' : '-'}{money(movement.amount)}</Typography></TableCell>
+                        <TableCell>
+                          <Chip
+                            label={movement.type === 'INCOME' ? 'Ingreso' : 'Egreso'}
+                            color={movement.type === 'INCOME' ? 'success' : 'error'}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography fontWeight={600} color={movement.type === 'INCOME' ? 'success.dark' : 'error.main'}>
+                            {movement.type === 'INCOME' ? '+' : '-'}
+                            {money(movement.amount)}
+                          </Typography>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

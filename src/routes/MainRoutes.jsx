@@ -39,7 +39,11 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
 const MainRoutes = {
   path: '/',
-  element: <RequireAuth><MainLayout /></RequireAuth>,
+  element: (
+    <RequireAuth>
+      <MainLayout />
+    </RequireAuth>
+  ),
   children: [
     {
       path: '/',

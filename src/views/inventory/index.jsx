@@ -43,17 +43,59 @@ import { api } from 'api/client';
 const sourceLabel = { MANUAL: 'Edición manual', PURCHASE_ORDER: 'Recepción de compra' };
 
 const demoItems = [
-  { id: 'demo-1', name: 'Pantalla iPhone 12 OLED', sku: 'SCR-IP12-OLED', category: 'Pantallas', cost: 1850, salePrice: 2800, stock: 3, minimumStock: 2, imageUrl: null },
-  { id: 'demo-2', name: 'Centro de carga Samsung A52', sku: 'CHG-SA52', category: 'Componentes', cost: 180, salePrice: 450, stock: 1, minimumStock: 3, imageUrl: null },
-  { id: 'demo-3', name: 'Adhesivo B-7000 15ml', sku: 'CON-B7000', category: 'Consumibles', cost: 55, salePrice: 120, stock: 12, minimumStock: 5, imageUrl: null }
+  {
+    id: 'demo-1',
+    name: 'Pantalla iPhone 12 OLED',
+    sku: 'SCR-IP12-OLED',
+    category: 'Pantallas',
+    cost: 1850,
+    salePrice: 2800,
+    stock: 3,
+    minimumStock: 2,
+    imageUrl: null
+  },
+  {
+    id: 'demo-2',
+    name: 'Centro de carga Samsung A52',
+    sku: 'CHG-SA52',
+    category: 'Componentes',
+    cost: 180,
+    salePrice: 450,
+    stock: 1,
+    minimumStock: 3,
+    imageUrl: null
+  },
+  {
+    id: 'demo-3',
+    name: 'Adhesivo B-7000 15ml',
+    sku: 'CON-B7000',
+    category: 'Consumibles',
+    cost: 55,
+    salePrice: 120,
+    stock: 12,
+    minimumStock: 5,
+    imageUrl: null
+  }
 ];
 
 function ProductImageInput({ onSelect, children }) {
   const inputRef = useRef(null);
   return (
     <>
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) onSelect(file); }} />
-      <Box onClick={() => inputRef.current?.click()} sx={{ cursor: 'pointer' }}>{children}</Box>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) onSelect(file);
+        }}
+      />
+      <Box onClick={() => inputRef.current?.click()} sx={{ cursor: 'pointer' }}>
+        {children}
+      </Box>
     </>
   );
 }
@@ -78,7 +120,11 @@ function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemov
               </IconButton>
             </ProductImageInput>
             {item.imageUrl && (
-              <IconButton size="small" onClick={() => onImageRemove(item.id)} sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}>
+              <IconButton
+                size="small"
+                onClick={() => onImageRemove(item.id)}
+                sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}
+              >
                 <DeleteRoundedIcon fontSize="small" color="error" />
               </IconButton>
             )}
@@ -87,8 +133,13 @@ function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemov
       </Box>
       <CardContent sx={{ flex: 1 }}>
         <Chip label={item.category} size="small" sx={{ mb: 1 }} />
-        <Typography variant="subtitle1" fontWeight={600} sx={{ lineHeight: 1.3 }}>{item.name}</Typography>
-        <Typography variant="caption" color="text.secondary">{item.sku}{item.supplier?.name ? ` · ${item.supplier.name}` : ''}</Typography>
+        <Typography variant="subtitle1" fontWeight={600} sx={{ lineHeight: 1.3 }}>
+          {item.name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {item.sku}
+          {item.supplier?.name ? ` · ${item.supplier.name}` : ''}
+        </Typography>
         <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline', mt: 1.5 }}>
           <Typography variant="h4">${Number(item.salePrice).toLocaleString('es-MX')}</Typography>
           <Chip label={`${item.stock} unidades`} color={lowStock ? 'warning' : 'success'} size="small" variant="outlined" />
@@ -96,9 +147,19 @@ function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemov
       </CardContent>
       {!isTechnician && (
         <CardActions>
-          <Button size="small" sx={{ flex: 1 }} onClick={() => onAdjust(item)}>Ajustar stock</Button>
-          <Tooltip title="Editar precio/pieza"><IconButton size="small" onClick={() => onEdit(item)}><EditRoundedIcon fontSize="small" /></IconButton></Tooltip>
-          <Tooltip title="Historial de precios"><IconButton size="small" onClick={() => onHistory(item)}><HistoryRoundedIcon fontSize="small" /></IconButton></Tooltip>
+          <Button size="small" sx={{ flex: 1 }} onClick={() => onAdjust(item)}>
+            Ajustar stock
+          </Button>
+          <Tooltip title="Editar precio/pieza">
+            <IconButton size="small" onClick={() => onEdit(item)}>
+              <EditRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Historial de precios">
+            <IconButton size="small" onClick={() => onHistory(item)}>
+              <HistoryRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </CardActions>
       )}
     </Card>
@@ -126,43 +187,107 @@ export default function Inventory() {
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const load = (search) => api.listInventory(search).then((records) => { setItems(records); setError(''); }).catch(() => setError('No se pudo conectar con la API. Mostrando inventario de ejemplo.')).finally(() => setLoading(false));
+  const load = (search) =>
+    api
+      .listInventory(search)
+      .then((records) => {
+        setItems(records);
+        setError('');
+      })
+      .catch(() => setError('No se pudo conectar con la API. Mostrando inventario de ejemplo.'))
+      .finally(() => setLoading(false));
 
   const isFirstRender = useRef(true);
-  useEffect(() => { load(query); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { api.listSuppliers().then(setSuppliers).catch(() => {}); }, []);
   useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    load(query);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    api
+      .listSuppliers()
+      .then(setSuppliers)
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     const timeout = window.setTimeout(() => load(query), 300);
     return () => window.clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  const source = items.length ? items : (query ? [] : demoItems);
+  const source = items.length ? items : query ? [] : demoItems;
   const categories = [...new Set(source.map((item) => item.category))];
   const filtered = category ? source.filter((item) => item.category === category) : source;
   const lowStock = source.filter((item) => item.stock <= item.minimumStock).length;
 
   const createItem = (event) => {
     event.preventDefault();
-    api.createInventoryItem({ ...itemForm, cost: Number(itemForm.cost), salePrice: Number(itemForm.salePrice), stock: Number(itemForm.stock), minimumStock: Number(itemForm.minimumStock), supplierId: itemForm.supplierId || undefined })
+    api
+      .createInventoryItem({
+        ...itemForm,
+        cost: Number(itemForm.cost),
+        salePrice: Number(itemForm.salePrice),
+        stock: Number(itemForm.stock),
+        minimumStock: Number(itemForm.minimumStock),
+        supplierId: itemForm.supplierId || undefined
+      })
       .then((created) => (newItemImage ? api.uploadInventoryImage(created.id, newItemImage) : null))
-      .then(() => { setNewItemOpen(false); setItemForm({ name: '', sku: '', category: '', cost: '', salePrice: '', stock: 0, minimumStock: 0, supplierId: '' }); setNewItemImage(null); return load(query); })
+      .then(() => {
+        setNewItemOpen(false);
+        setItemForm({ name: '', sku: '', category: '', cost: '', salePrice: '', stock: 0, minimumStock: 0, supplierId: '' });
+        setNewItemImage(null);
+        return load(query);
+      })
       .catch(() => setError('No se pudo crear la pieza.'));
   };
-  const adjustStock = (event) => { event.preventDefault(); api.adjustInventory(stockItem.id, { ...stockForm, quantity: Number(stockForm.quantity) }).then(() => { setStockItem(null); return load(query); }).catch(() => setError('No se pudo ajustar el stock.')); };
-  const changeImage = (id, file) => api.uploadInventoryImage(id, file).then(() => load(query)).catch(() => setError('No se pudo subir la imagen.'));
-  const removeImage = (id) => api.removeInventoryImage(id).then(() => load(query)).catch(() => setError('No se pudo eliminar la imagen.'));
+  const adjustStock = (event) => {
+    event.preventDefault();
+    api
+      .adjustInventory(stockItem.id, { ...stockForm, quantity: Number(stockForm.quantity) })
+      .then(() => {
+        setStockItem(null);
+        return load(query);
+      })
+      .catch(() => setError('No se pudo ajustar el stock.'));
+  };
+  const changeImage = (id, file) =>
+    api
+      .uploadInventoryImage(id, file)
+      .then(() => load(query))
+      .catch(() => setError('No se pudo subir la imagen.'));
+  const removeImage = (id) =>
+    api
+      .removeInventoryImage(id)
+      .then(() => load(query))
+      .catch(() => setError('No se pudo eliminar la imagen.'));
 
   const openEdit = (item) => {
     setEditItem(item);
-    setEditForm({ name: item.name, category: item.category, cost: item.cost, salePrice: item.salePrice, minimumStock: item.minimumStock, supplierId: item.supplierId || '' });
+    setEditForm({
+      name: item.name,
+      category: item.category,
+      cost: item.cost,
+      salePrice: item.salePrice,
+      minimumStock: item.minimumStock,
+      supplierId: item.supplierId || ''
+    });
   };
   const saveEdit = (event) => {
     event.preventDefault();
     setSavingEdit(true);
-    api.updateInventoryItem(editItem.id, { ...editForm, cost: Number(editForm.cost), salePrice: Number(editForm.salePrice), minimumStock: Number(editForm.minimumStock), supplierId: editForm.supplierId || undefined })
-      .then(() => { setEditItem(null); return load(query); })
+    api
+      .updateInventoryItem(editItem.id, {
+        ...editForm,
+        cost: Number(editForm.cost),
+        salePrice: Number(editForm.salePrice),
+        minimumStock: Number(editForm.minimumStock),
+        supplierId: editForm.supplierId || undefined
+      })
+      .then(() => {
+        setEditItem(null);
+        return load(query);
+      })
       .catch(() => setError('No se pudo actualizar la pieza.'))
       .finally(() => setSavingEdit(false));
   };
@@ -170,64 +295,335 @@ export default function Inventory() {
   const openHistory = (item) => {
     setHistoryItem(item);
     setLoadingHistory(true);
-    api.getInventoryPriceHistory(item.id).then(setHistory).catch(() => setHistory([])).finally(() => setLoadingHistory(false));
+    api
+      .getInventoryPriceHistory(item.id)
+      .then(setHistory)
+      .catch(() => setHistory([]))
+      .finally(() => setLoadingHistory(false));
   };
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}><Box><Typography variant="h2">Inventario</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Piezas, componentes y consumibles del taller.</Typography></Box>{!isTechnician && <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={() => setNewItemOpen(true)}>Nueva pieza</Button>}</Stack>
+      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+        <Box>
+          <Typography variant="h2">Inventario</Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Piezas, componentes y consumibles del taller.
+          </Typography>
+        </Box>
+        {!isTechnician && (
+          <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={() => setNewItemOpen(true)}>
+            Nueva pieza
+          </Button>
+        )}
+      </Stack>
       {error && <Alert severity="warning">{error}</Alert>}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}><MainCard content={false} sx={{ flex: 1 }}><Stack direction="row" spacing={2} sx={{ p: 2.5, alignItems: 'center' }}><Avatar variant="rounded" sx={{ bgcolor: 'primary.lighter', color: 'primary.main' }}><Inventory2RoundedIcon /></Avatar><Box><Typography variant="body2" color="text.secondary">Productos registrados</Typography><Typography variant="h2">{source.length}</Typography></Box></Stack></MainCard><MainCard content={false} sx={{ flex: 1 }}><Stack direction="row" spacing={2} sx={{ p: 2.5, alignItems: 'center' }}><Avatar variant="rounded" sx={{ bgcolor: 'warning.lighter', color: 'warning.dark' }}><Inventory2RoundedIcon /></Avatar><Box><Typography variant="body2" color="text.secondary">Stock bajo</Typography><Typography variant="h2">{lowStock}</Typography></Box></Stack></MainCard></Stack>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+        <MainCard content={false} sx={{ flex: 1 }}>
+          <Stack direction="row" spacing={2} sx={{ p: 2.5, alignItems: 'center' }}>
+            <Avatar variant="rounded" sx={{ bgcolor: 'primary.lighter', color: 'primary.main' }}>
+              <Inventory2RoundedIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Productos registrados
+              </Typography>
+              <Typography variant="h2">{source.length}</Typography>
+            </Box>
+          </Stack>
+        </MainCard>
+        <MainCard content={false} sx={{ flex: 1 }}>
+          <Stack direction="row" spacing={2} sx={{ p: 2.5, alignItems: 'center' }}>
+            <Avatar variant="rounded" sx={{ bgcolor: 'warning.lighter', color: 'warning.dark' }}>
+              <Inventory2RoundedIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Stock bajo
+              </Typography>
+              <Typography variant="h2">{lowStock}</Typography>
+            </Box>
+          </Stack>
+        </MainCard>
+      </Stack>
 
       <Stack spacing={1.5}>
-        <TextField size="small" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nombre, SKU o categoría" sx={{ width: { xs: '100%', sm: 380 } }} InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" /></InputAdornment> }} />
+        <TextField
+          size="small"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Buscar por nombre, SKU o categoría"
+          sx={{ width: { xs: '100%', sm: 380 } }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchRoundedIcon fontSize="small" />
+              </InputAdornment>
+            )
+          }}
+        />
         {categories.length > 1 && (
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-            <Chip label="Todas" size="small" color={category === '' ? 'primary' : 'default'} variant={category === '' ? 'filled' : 'outlined'} onClick={() => setCategory('')} />
-            {categories.map((cat) => <Chip key={cat} label={cat} size="small" color={category === cat ? 'primary' : 'default'} variant={category === cat ? 'filled' : 'outlined'} onClick={() => setCategory(cat)} />)}
+            <Chip
+              label="Todas"
+              size="small"
+              color={category === '' ? 'primary' : 'default'}
+              variant={category === '' ? 'filled' : 'outlined'}
+              onClick={() => setCategory('')}
+            />
+            {categories.map((cat) => (
+              <Chip
+                key={cat}
+                label={cat}
+                size="small"
+                color={category === cat ? 'primary' : 'default'}
+                variant={category === cat ? 'filled' : 'outlined'}
+                onClick={() => setCategory(cat)}
+              />
+            ))}
           </Stack>
         )}
       </Stack>
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
       ) : filtered.length === 0 ? (
-        <MainCard><Typography color="text.secondary" align="center" sx={{ py: 4 }}>No se encontraron piezas para esta búsqueda.</Typography></MainCard>
+        <MainCard>
+          <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
+            No se encontraron piezas para esta búsqueda.
+          </Typography>
+        </MainCard>
       ) : (
         <Grid container spacing={2.5}>
           {filtered.map((item) => (
             <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3 }}>
-              <ProductCard item={item} isTechnician={isTechnician} onAdjust={setStockItem} onImageSelect={changeImage} onImageRemove={removeImage} onEdit={openEdit} onHistory={openHistory} />
+              <ProductCard
+                item={item}
+                isTechnician={isTechnician}
+                onAdjust={setStockItem}
+                onImageSelect={changeImage}
+                onImageRemove={removeImage}
+                onEdit={openEdit}
+                onHistory={openHistory}
+              />
             </Grid>
           ))}
         </Grid>
       )}
 
-      <Dialog open={newItemOpen} onClose={() => setNewItemOpen(false)} fullWidth maxWidth="sm"><DialogTitle>Nueva pieza</DialogTitle><Stack component="form" onSubmit={createItem}><DialogContent><Stack spacing={2} sx={{ pt: 1 }}><TextField required fullWidth label="Nombre" value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} /><Stack direction="row" spacing={2}><TextField required fullWidth label="SKU" value={itemForm.sku} onChange={(event) => setItemForm({ ...itemForm, sku: event.target.value })} /><Autocomplete freeSolo fullWidth options={categories} inputValue={itemForm.category} onInputChange={(event, value) => setItemForm({ ...itemForm, category: value })} renderInput={(params) => <TextField {...params} required label="Categoría" />} /></Stack><TextField select fullWidth label="Proveedor" value={itemForm.supplierId || ''} onChange={(event) => setItemForm({ ...itemForm, supplierId: event.target.value })}><MenuItem value="">Sin proveedor</MenuItem>{suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.name}</MenuItem>)}</TextField><Stack direction="row" spacing={2}><TextField required type="number" fullWidth label="Costo" value={itemForm.cost} onChange={(event) => setItemForm({ ...itemForm, cost: event.target.value })} /><TextField required type="number" fullWidth label="Precio sugerido" value={itemForm.salePrice} onChange={(event) => setItemForm({ ...itemForm, salePrice: event.target.value })} /></Stack><Stack direction="row" spacing={2}><TextField type="number" fullWidth label="Stock inicial" value={itemForm.stock} onChange={(event) => setItemForm({ ...itemForm, stock: event.target.value })} /><TextField type="number" fullWidth label="Stock mínimo" value={itemForm.minimumStock} onChange={(event) => setItemForm({ ...itemForm, minimumStock: event.target.value })} /></Stack><Button component="label" variant="outlined" startIcon={<PhotoCameraRoundedIcon />}>{newItemImage ? newItemImage.name : 'Agregar foto (opcional)'}<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => setNewItemImage(event.target.files?.[0] || null)} /></Button></Stack></DialogContent><DialogActions><Button onClick={() => setNewItemOpen(false)}>Cancelar</Button><Button type="submit" variant="contained">Guardar</Button></DialogActions></Stack></Dialog>
-      <Dialog open={Boolean(stockItem)} onClose={() => setStockItem(null)} fullWidth maxWidth="xs"><DialogTitle>Ajustar stock</DialogTitle><Stack component="form" onSubmit={adjustStock}><DialogContent><Stack spacing={2} sx={{ pt: 1 }}><Typography>{stockItem?.name}</Typography><TextField select fullWidth label="Movimiento" value={stockForm.type} onChange={(event) => setStockForm({ ...stockForm, type: event.target.value })}><MenuItem value="IN">Entrada</MenuItem><MenuItem value="OUT">Salida</MenuItem><MenuItem value="ADJUSTMENT">Ajuste positivo</MenuItem></TextField><TextField required type="number" fullWidth label="Cantidad" value={stockForm.quantity} onChange={(event) => setStockForm({ ...stockForm, quantity: event.target.value })} inputProps={{ min: 1 }} /><TextField fullWidth label="Nota" value={stockForm.note} onChange={(event) => setStockForm({ ...stockForm, note: event.target.value })} /></Stack></DialogContent><DialogActions><Button onClick={() => setStockItem(null)}>Cancelar</Button><Button type="submit" variant="contained">Aplicar</Button></DialogActions></Stack></Dialog>
+      <Dialog open={newItemOpen} onClose={() => setNewItemOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Nueva pieza</DialogTitle>
+        <Stack component="form" onSubmit={createItem}>
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <TextField
+                required
+                fullWidth
+                label="Nombre"
+                value={itemForm.name}
+                onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })}
+              />
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  required
+                  fullWidth
+                  label="SKU"
+                  value={itemForm.sku}
+                  onChange={(event) => setItemForm({ ...itemForm, sku: event.target.value })}
+                />
+                <Autocomplete
+                  freeSolo
+                  fullWidth
+                  options={categories}
+                  inputValue={itemForm.category}
+                  onInputChange={(event, value) => setItemForm({ ...itemForm, category: value })}
+                  renderInput={(params) => <TextField {...params} required label="Categoría" />}
+                />
+              </Stack>
+              <TextField
+                select
+                fullWidth
+                label="Proveedor"
+                value={itemForm.supplierId || ''}
+                onChange={(event) => setItemForm({ ...itemForm, supplierId: event.target.value })}
+              >
+                <MenuItem value="">Sin proveedor</MenuItem>
+                {suppliers.map((supplier) => (
+                  <MenuItem key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  required
+                  type="number"
+                  fullWidth
+                  label="Costo"
+                  value={itemForm.cost}
+                  onChange={(event) => setItemForm({ ...itemForm, cost: event.target.value })}
+                />
+                <TextField
+                  required
+                  type="number"
+                  fullWidth
+                  label="Precio sugerido"
+                  value={itemForm.salePrice}
+                  onChange={(event) => setItemForm({ ...itemForm, salePrice: event.target.value })}
+                />
+              </Stack>
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  type="number"
+                  fullWidth
+                  label="Stock inicial"
+                  value={itemForm.stock}
+                  onChange={(event) => setItemForm({ ...itemForm, stock: event.target.value })}
+                />
+                <TextField
+                  type="number"
+                  fullWidth
+                  label="Stock mínimo"
+                  value={itemForm.minimumStock}
+                  onChange={(event) => setItemForm({ ...itemForm, minimumStock: event.target.value })}
+                />
+              </Stack>
+              <Button component="label" variant="outlined" startIcon={<PhotoCameraRoundedIcon />}>
+                {newItemImage ? newItemImage.name : 'Agregar foto (opcional)'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  onChange={(event) => setNewItemImage(event.target.files?.[0] || null)}
+                />
+              </Button>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setNewItemOpen(false)}>Cancelar</Button>
+            <Button type="submit" variant="contained">
+              Guardar
+            </Button>
+          </DialogActions>
+        </Stack>
+      </Dialog>
+      <Dialog open={Boolean(stockItem)} onClose={() => setStockItem(null)} fullWidth maxWidth="xs">
+        <DialogTitle>Ajustar stock</DialogTitle>
+        <Stack component="form" onSubmit={adjustStock}>
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <Typography>{stockItem?.name}</Typography>
+              <TextField
+                select
+                fullWidth
+                label="Movimiento"
+                value={stockForm.type}
+                onChange={(event) => setStockForm({ ...stockForm, type: event.target.value })}
+              >
+                <MenuItem value="IN">Entrada</MenuItem>
+                <MenuItem value="OUT">Salida</MenuItem>
+                <MenuItem value="ADJUSTMENT">Ajuste positivo</MenuItem>
+              </TextField>
+              <TextField
+                required
+                type="number"
+                fullWidth
+                label="Cantidad"
+                value={stockForm.quantity}
+                onChange={(event) => setStockForm({ ...stockForm, quantity: event.target.value })}
+                inputProps={{ min: 1 }}
+              />
+              <TextField
+                fullWidth
+                label="Nota"
+                value={stockForm.note}
+                onChange={(event) => setStockForm({ ...stockForm, note: event.target.value })}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setStockItem(null)}>Cancelar</Button>
+            <Button type="submit" variant="contained">
+              Aplicar
+            </Button>
+          </DialogActions>
+        </Stack>
+      </Dialog>
 
       <Dialog open={Boolean(editItem)} onClose={() => setEditItem(null)} fullWidth maxWidth="sm">
         <DialogTitle>Editar pieza</DialogTitle>
         <Stack component="form" onSubmit={saveEdit}>
           <DialogContent>
             <Stack spacing={2} sx={{ pt: 1 }}>
-              <TextField required fullWidth label="Nombre" value={editForm.name} onChange={(event) => setEditForm({ ...editForm, name: event.target.value })} />
-              <Autocomplete freeSolo fullWidth options={categories} inputValue={editForm.category} onInputChange={(event, value) => setEditForm({ ...editForm, category: value })} renderInput={(params) => <TextField {...params} required label="Categoría" />} />
-              <TextField select fullWidth label="Proveedor" value={editForm.supplierId} onChange={(event) => setEditForm({ ...editForm, supplierId: event.target.value })}>
+              <TextField
+                required
+                fullWidth
+                label="Nombre"
+                value={editForm.name}
+                onChange={(event) => setEditForm({ ...editForm, name: event.target.value })}
+              />
+              <Autocomplete
+                freeSolo
+                fullWidth
+                options={categories}
+                inputValue={editForm.category}
+                onInputChange={(event, value) => setEditForm({ ...editForm, category: value })}
+                renderInput={(params) => <TextField {...params} required label="Categoría" />}
+              />
+              <TextField
+                select
+                fullWidth
+                label="Proveedor"
+                value={editForm.supplierId}
+                onChange={(event) => setEditForm({ ...editForm, supplierId: event.target.value })}
+              >
                 <MenuItem value="">Sin proveedor</MenuItem>
-                {suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.name}</MenuItem>)}
+                {suppliers.map((supplier) => (
+                  <MenuItem key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </MenuItem>
+                ))}
               </TextField>
               <Stack direction="row" spacing={2}>
-                <TextField required type="number" fullWidth label="Costo" value={editForm.cost} onChange={(event) => setEditForm({ ...editForm, cost: event.target.value })} inputProps={{ min: 0, step: '0.01' }} />
-                <TextField required type="number" fullWidth label="Precio sugerido" value={editForm.salePrice} onChange={(event) => setEditForm({ ...editForm, salePrice: event.target.value })} inputProps={{ min: 0, step: '0.01' }} />
+                <TextField
+                  required
+                  type="number"
+                  fullWidth
+                  label="Costo"
+                  value={editForm.cost}
+                  onChange={(event) => setEditForm({ ...editForm, cost: event.target.value })}
+                  inputProps={{ min: 0, step: '0.01' }}
+                />
+                <TextField
+                  required
+                  type="number"
+                  fullWidth
+                  label="Precio sugerido"
+                  value={editForm.salePrice}
+                  onChange={(event) => setEditForm({ ...editForm, salePrice: event.target.value })}
+                  inputProps={{ min: 0, step: '0.01' }}
+                />
               </Stack>
-              <TextField type="number" fullWidth label="Stock mínimo" value={editForm.minimumStock} onChange={(event) => setEditForm({ ...editForm, minimumStock: event.target.value })} inputProps={{ min: 0 }} />
-              <Typography variant="caption" color="text.secondary">Si cambiás el costo o el precio, queda registrado en el historial de precios de esta pieza.</Typography>
+              <TextField
+                type="number"
+                fullWidth
+                label="Stock mínimo"
+                value={editForm.minimumStock}
+                onChange={(event) => setEditForm({ ...editForm, minimumStock: event.target.value })}
+                inputProps={{ min: 0 }}
+              />
+              <Typography variant="caption" color="text.secondary">
+                Si cambiás el costo o el precio, queda registrado en el historial de precios de esta pieza.
+              </Typography>
             </Stack>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditItem(null)}>Cancelar</Button>
-            <Button type="submit" variant="contained" disabled={savingEdit}>{savingEdit ? 'Guardando...' : 'Guardar'}</Button>
+            <Button type="submit" variant="contained" disabled={savingEdit}>
+              {savingEdit ? 'Guardando...' : 'Guardar'}
+            </Button>
           </DialogActions>
         </Stack>
       </Dialog>
@@ -236,9 +632,13 @@ export default function Inventory() {
         <DialogTitle>Historial de precios · {historyItem?.name}</DialogTitle>
         <DialogContent>
           {loadingHistory ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={24} /></Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} />
+            </Box>
           ) : history.length === 0 ? (
-            <Typography color="text.secondary" sx={{ py: 3 }}>Esta pieza todavía no tiene cambios de costo o precio registrados.</Typography>
+            <Typography color="text.secondary" sx={{ py: 3 }}>
+              Esta pieza todavía no tiene cambios de costo o precio registrados.
+            </Typography>
           ) : (
             <Table size="small">
               <TableHead>
@@ -253,9 +653,16 @@ export default function Inventory() {
                 {history.map((entry) => (
                   <TableRow key={entry.id}>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(entry.createdAt).toLocaleDateString('es-MX')}</TableCell>
-                    <TableCell>${Number(entry.previousCost).toLocaleString('es-MX')} → ${Number(entry.newCost).toLocaleString('es-MX')}</TableCell>
-                    <TableCell>${Number(entry.previousSalePrice).toLocaleString('es-MX')} → ${Number(entry.newSalePrice).toLocaleString('es-MX')}</TableCell>
-                    <TableCell>{sourceLabel[entry.source] || entry.source}{entry.reference ? ` · ${entry.reference}` : ''}</TableCell>
+                    <TableCell>
+                      ${Number(entry.previousCost).toLocaleString('es-MX')} → ${Number(entry.newCost).toLocaleString('es-MX')}
+                    </TableCell>
+                    <TableCell>
+                      ${Number(entry.previousSalePrice).toLocaleString('es-MX')} → ${Number(entry.newSalePrice).toLocaleString('es-MX')}
+                    </TableCell>
+                    <TableCell>
+                      {sourceLabel[entry.source] || entry.source}
+                      {entry.reference ? ` · ${entry.reference}` : ''}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
