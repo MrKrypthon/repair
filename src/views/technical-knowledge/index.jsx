@@ -64,6 +64,7 @@ export default function TechnicalKnowledge() {
   const [error, setError] = useState('');
   const [form, setForm] = useState({ title: '', category: 'SOLUTION', deviceBrand: '', deviceModel: '', description: '', keywords: '' });
   const [customers, setCustomers] = useState([]);
+  const [savingDocument, setSavingDocument] = useState(false);
 
   const loadDocuments = () =>
     api
@@ -95,13 +96,15 @@ export default function TechnicalKnowledge() {
   }, [knownDevices, form.deviceBrand]);
   const createDocument = (event) => {
     event.preventDefault();
+    setSavingDocument(true);
     api
       .createTechnicalDocument(form)
       .then(() => {
         setForm({ title: '', category: 'SOLUTION', deviceBrand: '', deviceModel: '', description: '', keywords: '' });
         return loadDocuments();
       })
-      .catch(() => setError('No se pudo guardar el documento.'));
+      .catch(() => setError('No se pudo guardar el documento.'))
+      .finally(() => setSavingDocument(false));
   };
 
   return (
@@ -216,8 +219,8 @@ export default function TechnicalKnowledge() {
               value={form.keywords}
               onChange={(event) => setForm({ ...form, keywords: event.target.value })}
             />
-            <Button type="submit" variant="contained">
-              Guardar documento
+            <Button type="submit" variant="contained" disabled={savingDocument}>
+              {savingDocument ? 'Guardando...' : 'Guardar documento'}
             </Button>
           </Stack>
         </MainCard>

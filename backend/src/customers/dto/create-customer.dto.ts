@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { EmptyToUndefined } from '../../common/empty-to-undefined';
 
 export class CreateCustomerDto {
   @IsString()
@@ -11,6 +12,7 @@ export class CreateCustomerDto {
   @MaxLength(30)
   phone!: string;
 
+  @EmptyToUndefined()
   @IsOptional()
   @IsEmail()
   email?: string;

@@ -40,6 +40,7 @@ export default function Appointments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [savingEvent, setSavingEvent] = useState(false);
   const [form, setForm] = useState({ title: '', type: 'APPOINTMENT', startsAt: '', endsAt: '', notes: '', customerId: '' });
   const [customers, setCustomers] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -92,6 +93,7 @@ export default function Appointments() {
 
   const createEvent = (event) => {
     event.preventDefault();
+    setSavingEvent(true);
     api
       .createAppointment(form)
       .then(() => {
@@ -99,7 +101,8 @@ export default function Appointments() {
         setForm({ title: '', type: 'APPOINTMENT', startsAt: '', endsAt: '', notes: '', customerId: '' });
         return loadEvents();
       })
-      .catch(() => setError('No se pudo crear el evento.'));
+      .catch(() => setError('No se pudo crear el evento.'))
+      .finally(() => setSavingEvent(false));
   };
 
   const handleDateSelect = (selection) => {
@@ -253,8 +256,8 @@ export default function Appointments() {
                 onChange={(event) => setForm({ ...form, notes: event.target.value })}
               />
               <Divider />
-              <Button type="submit" variant="contained" startIcon={<EventAvailableRoundedIcon />}>
-                Guardar evento
+              <Button type="submit" variant="contained" startIcon={<EventAvailableRoundedIcon />} disabled={savingEvent}>
+                {savingEvent ? 'Guardando...' : 'Guardar evento'}
               </Button>
               <Typography variant="caption" color="text.secondary">
                 Tip: selecciona un rango en el calendario para prellenar la fecha.

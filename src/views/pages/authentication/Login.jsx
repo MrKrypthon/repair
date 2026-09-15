@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 
 import useMediaQuery from '@mui/material/useMediaQuery';
-import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
@@ -33,21 +32,15 @@ export default function Login() {
                 </Box>
                 <Stack sx={{ alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                   <Typography variant={downMD ? 'h3' : 'h2'} sx={{ color: 'secondary.main' }}>
-                    Hi, Welcome Back
+                    Hola de nuevo
                   </Typography>
                   <Typography variant="caption" sx={{ fontSize: '16px', textAlign: { xs: 'center', md: 'inherit' } }}>
-                    Enter your credentials to continue
+                    Ingresa tus credenciales para continuar
                   </Typography>
                 </Stack>
                 <Box sx={{ width: 1 }}>
                   <AuthLogin />
                 </Box>
-                <Divider sx={{ width: 1 }} />
-                <Stack sx={{ alignItems: 'center' }}>
-                  <Typography component={Link} to="/pages/register" variant="subtitle1" sx={{ textDecoration: 'none' }}>
-                    Don&apos;t have an account?
-                  </Typography>
-                </Stack>
               </Stack>
             </AuthCardWrapper>
           </Box>

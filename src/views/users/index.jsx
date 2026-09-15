@@ -46,6 +46,7 @@ export default function Users() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'TECHNICIAN' });
   const [showPassword, setShowPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const load = () =>
     api
@@ -57,6 +58,7 @@ export default function Users() {
   }, []);
   const create = (event) => {
     event.preventDefault();
+    setCreating(true);
     api
       .createUser(form)
       .then(() => {
@@ -65,7 +67,8 @@ export default function Users() {
         setShowPassword(false);
         return load();
       })
-      .catch(() => setError('No se pudo crear el usuario. Verifica que el correo no esté repetido.'));
+      .catch(() => setError('No se pudo crear el usuario. Verifica que el correo no esté repetido.'))
+      .finally(() => setCreating(false));
   };
   const rollPassword = () => {
     const generated = generatePassword();
@@ -190,8 +193,8 @@ export default function Users() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained">
-              Crear usuario
+            <Button type="submit" variant="contained" disabled={creating}>
+              {creating ? 'Creando...' : 'Crear usuario'}
             </Button>
           </DialogActions>
         </Stack>

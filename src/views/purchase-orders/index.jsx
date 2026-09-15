@@ -31,6 +31,7 @@ export default function PurchaseOrders() {
   const [draft, setDraft] = useState(emptyDraft);
   const [lines, setLines] = useState([]);
   const [orderToCancel, setOrderToCancel] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const load = () =>
     api
@@ -62,6 +63,7 @@ export default function PurchaseOrders() {
   const create = (event) => {
     event.preventDefault();
     if (!supplierId || !lines.length) return;
+    setCreating(true);
     api
       .createPurchaseOrder({
         supplierId,
@@ -75,7 +77,8 @@ export default function PurchaseOrders() {
         setLines([]);
         return load();
       })
-      .catch(() => setError('No se pudo crear la orden de compra.'));
+      .catch(() => setError('No se pudo crear la orden de compra.'))
+      .finally(() => setCreating(false));
   };
 
   const receive = (id) =>
@@ -215,8 +218,8 @@ export default function PurchaseOrders() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained" disabled={!supplierId || !lines.length}>
-              Crear orden
+            <Button type="submit" variant="contained" disabled={!supplierId || !lines.length || creating}>
+              {creating ? 'Creando...' : 'Crear orden'}
             </Button>
           </DialogActions>
         </Stack>

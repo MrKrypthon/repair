@@ -22,6 +22,7 @@ export default function Suppliers() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', phone: '', email: '', notes: '' });
+  const [creating, setCreating] = useState(false);
   const load = () =>
     api
       .listSuppliers()
@@ -32,6 +33,7 @@ export default function Suppliers() {
   }, []);
   const create = (event) => {
     event.preventDefault();
+    setCreating(true);
     api
       .createSupplier(form)
       .then(() => {
@@ -39,7 +41,8 @@ export default function Suppliers() {
         setForm({ name: '', phone: '', email: '', notes: '' });
         return load();
       })
-      .catch(() => setError('No se pudo crear el proveedor.'));
+      .catch(() => setError('No se pudo crear el proveedor.'))
+      .finally(() => setCreating(false));
   };
 
   return (
@@ -118,8 +121,8 @@ export default function Suppliers() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained">
-              Guardar
+            <Button type="submit" variant="contained" disabled={creating}>
+              {creating ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogActions>
         </Stack>

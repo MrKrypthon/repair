@@ -31,6 +31,7 @@ export default function NewServiceOrder() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [customers, setCustomers] = useState([]);
   const [form, setForm] = useState({
@@ -85,6 +86,7 @@ export default function NewServiceOrder() {
   const submit = (event) => {
     event.preventDefault();
     setError('');
+    setSaving(true);
     api
       .createServiceOrder({
         customerId: form.customer,
@@ -100,7 +102,10 @@ export default function NewServiceOrder() {
         setSaved(true);
         window.setTimeout(() => navigate('/service-orders'), 700);
       })
-      .catch(() => setError('No se pudo crear la orden. Revisa la conexión con el backend y los datos del formulario.'));
+      .catch(() => {
+        setError('No se pudo crear la orden. Revisa la conexión con el backend y los datos del formulario.');
+        setSaving(false);
+      });
   };
 
   return (
@@ -222,8 +227,8 @@ export default function NewServiceOrder() {
             <Button component={Link} to="/service-orders">
               Cancelar
             </Button>
-            <Button type="submit" variant="contained" startIcon={<SaveRoundedIcon />}>
-              Crear orden
+            <Button type="submit" variant="contained" startIcon={<SaveRoundedIcon />} disabled={saving}>
+              {saving ? 'Guardando...' : 'Crear orden'}
             </Button>
           </Stack>
         </Stack>

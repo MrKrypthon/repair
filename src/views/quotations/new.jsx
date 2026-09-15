@@ -36,6 +36,7 @@ export default function NewQuotation() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [customers, setCustomers] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -127,6 +128,7 @@ export default function NewQuotation() {
       setError('Agrega al menos un concepto a la cotización.');
       return;
     }
+    setSaving(true);
     api
       .createQuotation({
         customerId: form.customer,
@@ -143,7 +145,10 @@ export default function NewQuotation() {
         setSaved(true);
         window.setTimeout(() => navigate(`/quotations/${quotation.folio}`), 700);
       })
-      .catch(() => setError('No se pudo crear la cotización. Revisa la conexión con el backend y los datos del formulario.'));
+      .catch(() => {
+        setError('No se pudo crear la cotización. Revisa la conexión con el backend y los datos del formulario.');
+        setSaving(false);
+      });
   };
 
   return (
@@ -342,8 +347,8 @@ export default function NewQuotation() {
             <Button component={Link} to="/quotations">
               Cancelar
             </Button>
-            <Button type="submit" variant="contained" startIcon={<SaveRoundedIcon />}>
-              Crear cotización
+            <Button type="submit" variant="contained" startIcon={<SaveRoundedIcon />} disabled={saving}>
+              {saving ? 'Guardando...' : 'Crear cotización'}
             </Button>
           </Stack>
         </Stack>
