@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -8,6 +8,7 @@ import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import Alert from '@mui/material/Alert';
 import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
@@ -20,6 +21,7 @@ import { api } from 'api/client';
 
 const emptyItem = { description: '', quantity: 1, unitPrice: '' };
 const money = (value) => `$${Number(value || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+const COMMON_ISSUES = ['Pantalla rota', 'No enciende', 'No carga / batería', 'Se mojó', 'Botones no responden', 'Cámara no funciona', 'Audio/bocina falla', 'Lento o se congela'];
 
 export default function NewQuotation() {
   const navigate = useNavigate();
@@ -38,6 +40,23 @@ export default function NewQuotation() {
     api.listCustomers().then(setCustomers).catch(() => setError('No se pudo cargar la lista de clientes. Inicia el backend para crear cotizaciones.'));
   }, []);
   useEffect(() => { if (form.customer) api.getCustomer(form.customer).then((customer) => setDevices(customer.devices)).catch(() => setDevices([])); else setDevices([]); }, [form.customer]);
+
+  const knownDevices = useMemo(() => customers.flatMap((customer) => customer.devices || []), [customers]);
+  const brandOptions = useMemo(() => [...new Set(knownDevices.map((device) => device.brand))].sort((a, b) => a.localeCompare(b)), [knownDevices]);
+  const modelOptions = useMemo(() => {
+    const matches = form.brand ? knownDevices.filter((device) => device.brand.toLowerCase() === form.brand.toLowerCase()) : knownDevices;
+    return [...new Set(matches.map((device) => device.model))].sort((a, b) => a.localeCompare(b));
+  }, [knownDevices, form.brand]);
+
+  const pickModel = (model) => {
+    const match = knownDevices.find((device) => device.model === model && (!form.brand || device.brand.toLowerCase() === form.brand.toLowerCase()));
+    setForm((current) => ({ ...current, model, ...(match ? { category: match.category, brand: match.brand } : {}) }));
+  };
+
+  const addIssue = (issue) => {
+    setForm((current) => ({ ...current, issueDescription: current.issueDescription ? `${current.issueDescription}; ${issue}` : issue }));
+  };
+
   useEffect(() => {
     Promise.all([api.listInventory(), api.listServiceCatalog()])
       .then(([parts, services]) => {
@@ -89,12 +108,37 @@ export default function NewQuotation() {
             <Grid size={{ xs: 12, md: 6 }}><TextField required select fullWidth label="Cliente" value={form.customer} onChange={update('customer')}>{customers.map((customer) => <MenuItem key={customer.id} value={customer.id}>{customer.name}</MenuItem>)}</TextField></Grid>
             <Grid size={{ xs: 12, md: 6 }}><TextField select fullWidth label="Equipo existente (opcional)" value={form.deviceId} onChange={update('deviceId')}><MenuItem value="">Registrar equipo nuevo</MenuItem>{devices.map((device) => <MenuItem key={device.id} value={device.id}>{device.brand} {device.model} · {device.category}</MenuItem>)}</TextField></Grid>
             <Grid size={{ xs: 12, md: 6 }}><TextField required={!form.deviceId} select fullWidth label="Tipo de equipo" value={form.category} onChange={update('category')}><MenuItem value="CELULAR">Celular</MenuItem><MenuItem value="TABLET">Tablet</MenuItem><MenuItem value="LAPTOP">Laptop</MenuItem><MenuItem value="CONSOLA">Consola</MenuItem><MenuItem value="OTRO">Otro</MenuItem></TextField></Grid>
-            <Grid size={{ xs: 12, sm: 6 }}><TextField required={!form.deviceId} fullWidth label="Marca" placeholder="Ej. Apple" value={form.brand} onChange={update('brand')} /></Grid>
-            <Grid size={{ xs: 12, sm: 6 }}><TextField required={!form.deviceId} fullWidth label="Modelo" placeholder="Ej. iPhone 12" value={form.model} onChange={update('model')} /></Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Autocomplete
+                freeSolo
+                fullWidth
+                options={brandOptions}
+                inputValue={form.brand}
+                onInputChange={(event, value) => setForm((current) => ({ ...current, brand: value }))}
+                renderInput={(params) => <TextField {...params} required={!form.deviceId} label="Marca" placeholder="Ej. Apple" />}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Autocomplete
+                freeSolo
+                fullWidth
+                options={modelOptions}
+                inputValue={form.model}
+                onInputChange={(event, value) => pickModel(value)}
+                renderInput={(params) => <TextField {...params} required={!form.deviceId} label="Modelo" placeholder="Ej. iPhone 12" />}
+              />
+            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth type="date" label="Válida hasta (opcional)" InputLabelProps={{ shrink: true }} value={form.validUntil} onChange={update('validUntil')} /></Grid>
           </Grid>
           <Typography variant="h4">Falla reportada</Typography>
-          <TextField required fullWidth multiline minRows={3} label="Falla reportada por el cliente" placeholder="Describe el problema tal como lo explica el cliente..." value={form.issueDescription} onChange={update('issueDescription')} />
+          <Stack spacing={1}>
+            <TextField required fullWidth multiline minRows={3} label="Falla reportada por el cliente" placeholder="Describe el problema tal como lo explica el cliente..." value={form.issueDescription} onChange={update('issueDescription')} />
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              {COMMON_ISSUES.map((issue) => (
+                <Chip key={issue} label={issue} size="small" variant="outlined" onClick={() => addIssue(issue)} />
+              ))}
+            </Stack>
+          </Stack>
           <Typography variant="h4">Conceptos</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: -1.5 }}>
             Elige una pieza o servicio del catálogo para que el precio se llene solo, o escribe un concepto libre y captura el precio a mano.
