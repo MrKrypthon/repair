@@ -57,6 +57,13 @@ export default function Appointments() {
   useEffect(() => { loadEvents(); }, []);
   useEffect(() => { api.listCustomers().then(setCustomers).catch(() => {}); }, []);
 
+  const suggestedTitle = (type, customerId) => {
+    const customer = customers.find((item) => item.id === customerId);
+    return customer ? `${typeLabel[type]} · ${customer.name}` : typeLabel[type];
+  };
+  const applyType = (type) => setForm((current) => ({ ...current, type, ...(current.title === '' || current.title === suggestedTitle(current.type, current.customerId) ? { title: suggestedTitle(type, current.customerId) } : {}) }));
+  const applyCustomer = (customerId) => setForm((current) => ({ ...current, customerId, ...(current.title === '' || current.title === suggestedTitle(current.type, current.customerId) ? { title: suggestedTitle(current.type, customerId) } : {}) }));
+
   const createEvent = (event) => {
     event.preventDefault();
     api.createAppointment(form).then(() => { setSaved(true); setForm({ title: '', type: 'APPOINTMENT', startsAt: '', endsAt: '', notes: '', customerId: '' }); return loadEvents(); }).catch(() => setError('No se pudo crear el evento.'));
@@ -140,17 +147,17 @@ export default function Appointments() {
         <Grid size={{ xs: 12, lg: 4 }}>
           <MainCard title="Crear evento" id="new-event">
             <Stack component="form" spacing={2} onSubmit={createEvent}>
-              <TextField required fullWidth label="Título" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Ej. Entrega iPhone 12" />
-              <TextField select fullWidth label="Tipo" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>
+              <TextField select fullWidth label="Tipo" value={form.type} onChange={(event) => applyType(event.target.value)}>
                 <MenuItem value="RECEIVING">Recepción</MenuItem>
                 <MenuItem value="DELIVERY">Entrega</MenuItem>
                 <MenuItem value="APPOINTMENT">Cita</MenuItem>
                 <MenuItem value="WORK">Trabajo</MenuItem>
               </TextField>
-              <TextField select fullWidth label="Cliente (opcional)" value={form.customerId || searchParams.get('customerId') || ''} onChange={(event) => setForm({ ...form, customerId: event.target.value })}>
+              <TextField select fullWidth label="Cliente (opcional)" value={form.customerId || searchParams.get('customerId') || ''} onChange={(event) => applyCustomer(event.target.value)}>
                 <MenuItem value="">Sin asociar</MenuItem>
                 {customers.map((customer) => <MenuItem key={customer.id} value={customer.id}>{customer.name}</MenuItem>)}
               </TextField>
+              <TextField required fullWidth label="Título" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Ej. Entrega iPhone 12" helperText="Se sugiere solo según el tipo y cliente; puedes editarlo." />
               <TextField required fullWidth type="datetime-local" label="Inicio" InputLabelProps={{ shrink: true }} value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} />
               <TextField required fullWidth type="datetime-local" label="Fin" InputLabelProps={{ shrink: true }} value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} />
               <TextField fullWidth multiline minRows={2} label="Notas" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
