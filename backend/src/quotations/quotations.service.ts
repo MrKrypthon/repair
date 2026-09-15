@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { DeviceCategory, Prisma, QuotationStatus } from '@prisma/client';
+import { generateFolio } from '../common/folio';
 import { PrismaService } from '../prisma/prisma.service';
 
 type QuotationItemInput = { description: string; quantity: number; unitPrice: number };
@@ -52,7 +53,7 @@ export class QuotationsService {
     if (!data.deviceId && (!data.category || !data.brand || !data.model)) {
       throw new BadRequestException('Indica un equipo existente o los datos de marca, modelo y categoría');
     }
-    const folio = `COT-${Date.now().toString().slice(-6)}`;
+    const folio = generateFolio('COT');
     return this.prisma.$transaction(async (transaction) => {
       const device = data.deviceId
         ? await transaction.device.findFirstOrThrow({ where: { id: data.deviceId, customerId: data.customerId } })
@@ -106,7 +107,7 @@ export class QuotationsService {
     if (quotation.serviceOrderId) throw new BadRequestException('Esta cotización ya fue convertida en una orden');
 
     const total = quotation.items.reduce((sum, item) => sum + Number(item.unitPrice) * item.quantity, 0);
-    const orderFolio = `OS-${Date.now().toString().slice(-6)}`;
+    const orderFolio = generateFolio('OS');
 
     return this.prisma.$transaction(async (transaction) => {
       const order = await transaction.serviceOrder.create({

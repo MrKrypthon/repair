@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { generateFolio } from '../common/folio';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -9,7 +10,7 @@ export class PurchaseOrdersService {
   findAll() { return this.prisma.purchaseOrder.findMany({ include: { supplier: true, lines: { include: { inventoryItem: true } } }, orderBy: { createdAt: 'desc' } }); }
 
   create(data: { supplierId: string; notes?: string; lines: { inventoryItemId: string; quantity: number; unitCost: number }[] }) {
-    const folio = `OC-${Date.now().toString().slice(-6)}`;
+    const folio = generateFolio('OC');
     return this.prisma.purchaseOrder.create({ data: { folio, supplierId: data.supplierId, notes: data.notes, lines: { create: data.lines.map((line) => ({ inventoryItemId: line.inventoryItemId, quantity: line.quantity, unitCost: new Prisma.Decimal(line.unitCost) })) } }, include: { supplier: true, lines: { include: { inventoryItem: true } } } });
   }
 

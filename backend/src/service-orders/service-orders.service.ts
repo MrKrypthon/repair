@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { AttachmentCategory, BudgetStatus, DeviceCategory, Priority, Prisma, ServiceOrderStatus } from '@prisma/client';
+import { generateFolio } from '../common/folio';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -148,7 +149,7 @@ export class ServiceOrdersService {
     if (original.status !== ServiceOrderStatus.ENTREGADO) throw new BadRequestException('Solo se puede abrir garantía sobre una orden entregada');
     if (!original.warrantyExpiresAt || original.warrantyExpiresAt < new Date()) throw new BadRequestException('Esta orden no tiene garantía vigente');
 
-    const claimFolio = `GA-${Date.now().toString().slice(-6)}`;
+    const claimFolio = generateFolio('GA');
     return this.prisma.$transaction(async (transaction) => {
       return transaction.serviceOrder.create({
         data: {
@@ -167,7 +168,7 @@ export class ServiceOrdersService {
   }
 
   async create(data: CreateOrderInput) {
-    const folio = `OS-${Date.now().toString().slice(-6)}`;
+    const folio = generateFolio('OS');
     return this.prisma.$transaction(async (transaction) => {
       const device = data.deviceId
         ? await transaction.device.findFirstOrThrow({ where: { id: data.deviceId, customerId: data.customerId } })

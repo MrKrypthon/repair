@@ -1,8 +1,9 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { assertAllowedMimeType, ATTACHMENT_MIME_TYPES } from '../common/file-validation';
 import { AddPartDto, CreateServiceOrderDto, UpdateBudgetDto } from './dto/create-service-order.dto';
 import { DeliverOrderDto, UpdateDiagnosisDto } from './dto/update-diagnosis.dto';
 import { CreateTechnicalNoteDto } from './dto/create-technical-note.dto';
@@ -12,7 +13,6 @@ import { CreateWarrantyClaimDto } from './dto/create-warranty-claim.dto';
 import { AssignTechnicianDto } from './dto/assign-technician.dto';
 import { ServiceOrdersService } from './service-orders.service';
 
-const ALLOWED_ATTACHMENT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 
 @Controller('service-orders')
@@ -105,9 +105,7 @@ export class ServiceOrdersController {
   @Roles('ADMIN', 'RECEPTIONIST', 'TECHNICIAN')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_ATTACHMENT_SIZE } }))
   addAttachment(@Param('folio') folio: string, @UploadedFile() file: Express.Multer.File, @Body() body: CreateAttachmentDto) {
-    if (file && !ALLOWED_ATTACHMENT_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException('Solo se permiten imágenes (JPG, PNG, WEBP) o PDF');
-    }
+    assertAllowedMimeType(file, ATTACHMENT_MIME_TYPES, 'Solo se permiten imágenes (JPG, PNG, WEBP) o PDF');
     return this.serviceOrdersService.addAttachment(folio, file, body.category);
   }
 

@@ -1,12 +1,12 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { assertAllowedMimeType, IMAGE_MIME_TYPES } from '../common/file-validation';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryItemDto, StockChangeDto, UpdateInventoryItemDto } from './dto/create-inventory-item.dto';
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 @Controller('inventory')
@@ -40,9 +40,7 @@ export class InventoryController {
   @Roles('ADMIN', 'RECEPTIONIST')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_IMAGE_SIZE } }))
   uploadImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
-    if (file && !ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException('Solo se permiten imágenes JPG, PNG o WEBP');
-    }
+    assertAllowedMimeType(file, IMAGE_MIME_TYPES, 'Solo se permiten imágenes JPG, PNG o WEBP');
     return this.inventoryService.uploadImage(id, file);
   }
 
