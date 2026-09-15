@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import ReactApexChart from 'react-apexcharts';
 
 import EngineeringRoundedIcon from '@mui/icons-material/EngineeringRounded';
 import Alert from '@mui/material/Alert';
@@ -20,6 +19,7 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 
 import MainCard from 'ui-component/cards/MainCard';
+import ReactApexChart from 'ui-component/charts/LazyApexChart';
 import { api } from 'api/client';
 
 const money = (value) => `$${Number(value || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;

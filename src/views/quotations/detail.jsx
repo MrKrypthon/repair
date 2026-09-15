@@ -24,7 +24,6 @@ import Typography from '@mui/material/Typography';
 
 import MainCard from 'ui-component/cards/MainCard';
 import { api } from 'api/client';
-import { generateQuotationPdf } from 'utils/generateQuotationPdf';
 
 const statusLabels = { DRAFT: 'Borrador', SENT: 'Enviada', APPROVED: 'Aprobada', REJECTED: 'Rechazada', CONVERTED: 'Convertida' };
 const statusColors = { DRAFT: 'default', SENT: 'info', APPROVED: 'success', REJECTED: 'error', CONVERTED: 'primary' };
@@ -37,6 +36,15 @@ export default function QuotationDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+
+  const downloadPdf = () => {
+    setGeneratingPdf(true);
+    import('utils/generateQuotationPdf')
+      .then(({ generateQuotationPdf }) => generateQuotationPdf(quotation))
+      .catch(() => setMessage({ type: 'error', text: 'No se pudo generar el PDF.' }))
+      .finally(() => setGeneratingPdf(false));
+  };
 
   const load = () =>
     api
@@ -102,8 +110,8 @@ export default function QuotationDetail() {
             {quotation.customer.name} · {quotation.device.brand} {quotation.device.model}
           </Typography>
         </Box>
-        <Button variant="outlined" startIcon={<PictureAsPdfRoundedIcon />} onClick={() => generateQuotationPdf(quotation)}>
-          Descargar PDF
+        <Button variant="outlined" startIcon={<PictureAsPdfRoundedIcon />} onClick={downloadPdf} disabled={generatingPdf}>
+          {generatingPdf ? 'Generando...' : 'Descargar PDF'}
         </Button>
       </Stack>
       {message.text && <Alert severity={message.type || 'info'}>{message.text}</Alert>}

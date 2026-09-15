@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import ReactApexChart from 'react-apexcharts';
 
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -27,6 +26,7 @@ import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 
 import MainCard from 'ui-component/cards/MainCard';
+import ReactApexChart from 'ui-component/charts/LazyApexChart';
 import { gridSpacing } from 'store/constant';
 import { api } from 'api/client';
 

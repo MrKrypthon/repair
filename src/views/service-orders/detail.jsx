@@ -41,7 +41,6 @@ import Typography from '@mui/material/Typography';
 import MainCard from 'ui-component/cards/MainCard';
 import { api } from 'api/client';
 import { activeStepIndex, journeySteps } from 'utils/serviceOrderJourney';
-import { generateOrderPdf } from 'utils/generateOrderPdf';
 
 const statuses = [
   ['RECIBIDO', 'Recibido'],
@@ -311,7 +310,8 @@ export default function ServiceOrderDetail() {
 
   const downloadPdf = () => {
     setGeneratingPdf(true);
-    generateOrderPdf(order)
+    import('utils/generateOrderPdf')
+      .then(({ generateOrderPdf }) => generateOrderPdf(order))
       .catch(() => setMessage({ type: 'error', text: 'No se pudo generar el PDF.' }))
       .finally(() => setGeneratingPdf(false));
   };
