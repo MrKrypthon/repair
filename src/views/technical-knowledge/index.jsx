@@ -81,7 +81,7 @@ export default function TechnicalKnowledge() {
       .then(setCustomers)
       .catch(() => {});
   }, []);
-  const source = documents.length ? documents : demoDocuments;
+  const source = error ? demoDocuments : documents;
 
   const knownDevices = useMemo(() => customers.flatMap((customer) => customer.devices || []), [customers]);
   const brandOptions = useMemo(
@@ -145,6 +145,10 @@ export default function TechnicalKnowledge() {
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <CircularProgress />
               </Box>
+            ) : source.length === 0 ? (
+              <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
+                {query ? 'Nada coincide con la búsqueda.' : 'Todavía no hay documentos técnicos registrados.'}
+              </Typography>
             ) : (
               source.map((document) => (
                 <Box key={document.id} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>

@@ -114,8 +114,9 @@ export default function ServiceOrders() {
       .finally(() => setLoading(false));
   }, []);
 
-  const source = records.length
-    ? records.map((order) => ({
+  const source = error
+    ? orders
+    : records.map((order) => ({
         ...order,
         rawStatus: order.status,
         customer: order.customer.name,
@@ -129,8 +130,7 @@ export default function ServiceOrders() {
           Boolean(order.estimatedDeliveryAt) &&
           new Date(order.estimatedDeliveryAt) < new Date() &&
           !NOT_OVERDUE_STATUSES.includes(order.status)
-      }))
-    : orders;
+      }));
   const filteredOrders = source.filter(
     (order) =>
       `${order.folio} ${order.customer} ${order.device} ${order.issue}`.toLowerCase().includes(query.toLowerCase()) &&
@@ -282,6 +282,16 @@ export default function ServiceOrders() {
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     <CircularProgress size={24} sx={{ my: 3 }} />
+                  </TableCell>
+                </TableRow>
+              ) : filteredOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    <Typography color="text.secondary" sx={{ py: 3 }}>
+                      {query || statusFilter !== 'ALL' || priorityFilter !== 'ALL' || overdueOnly || presetStatuses
+                        ? 'Ninguna orden coincide con los filtros aplicados.'
+                        : 'Todavía no hay órdenes de servicio registradas.'}
+                    </Typography>
                   </TableCell>
                 </TableRow>
               ) : (

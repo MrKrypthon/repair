@@ -115,13 +115,18 @@ function ProductCard({ item, isTechnician, onAdjust, onImageSelect, onImageRemov
         {!isTechnician && (
           <Stack direction="row" spacing={0.5} sx={{ position: 'absolute', top: 6, right: 6 }}>
             <ProductImageInput onSelect={(file) => onImageSelect(item.id, file)}>
-              <IconButton size="small" sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}>
+              <IconButton
+                size="small"
+                title={item.imageUrl ? 'Reemplazar foto' : 'Agregar foto'}
+                sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}
+              >
                 <PhotoCameraRoundedIcon fontSize="small" />
               </IconButton>
             </ProductImageInput>
             {item.imageUrl && (
               <IconButton
                 size="small"
+                title="Quitar foto"
                 onClick={() => onImageRemove(item.id)}
                 sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}
               >
@@ -174,6 +179,7 @@ export default function Inventory() {
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [loadFailed, setLoadFailed] = useState(false);
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [stockItem, setStockItem] = useState(null);
   const [itemForm, setItemForm] = useState({ name: '', sku: '', category: '', cost: '', salePrice: '', stock: 0, minimumStock: 0 });
@@ -193,8 +199,12 @@ export default function Inventory() {
       .then((records) => {
         setItems(records);
         setError('');
+        setLoadFailed(false);
       })
-      .catch(() => setError('No se pudo conectar con la API. Mostrando inventario de ejemplo.'))
+      .catch(() => {
+        setError('No se pudo conectar con la API. Mostrando inventario de ejemplo.');
+        setLoadFailed(true);
+      })
       .finally(() => setLoading(false));
 
   const isFirstRender = useRef(true);
@@ -216,7 +226,7 @@ export default function Inventory() {
     return () => window.clearTimeout(timeout);
   }, [query]);
 
-  const source = items.length ? items : query ? [] : demoItems;
+  const source = loadFailed ? demoItems : items;
   const categories = [...new Set(source.map((item) => item.category))];
   const filtered = category ? source.filter((item) => item.category === category) : source;
   const lowStock = source.filter((item) => item.stock <= item.minimumStock).length;

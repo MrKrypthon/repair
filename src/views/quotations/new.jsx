@@ -323,7 +323,7 @@ export default function NewQuotation() {
                   </Typography>
                   <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                     <Typography fontWeight={600}>{money(item.quantity * item.unitPrice)}</Typography>
-                    <IconButton size="small" color="error" onClick={() => removeItem(index)}>
+                    <IconButton size="small" color="error" title="Quitar concepto" onClick={() => removeItem(index)}>
                       <DeleteRoundedIcon fontSize="small" />
                     </IconButton>
                   </Stack>

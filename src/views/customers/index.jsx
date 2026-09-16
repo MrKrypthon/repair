@@ -44,7 +44,7 @@ export default function Customers() {
       .finally(() => setLoading(false));
   }, []);
 
-  const source = records.length ? records : customers;
+  const source = error ? customers : records;
   const filteredCustomers = source.filter((customer) =>
     `${customer.name} ${customer.phone} ${customer.email || ''}`.toLowerCase().includes(query.toLowerCase())
   );
@@ -124,6 +124,14 @@ export default function Customers() {
                 <TableRow>
                   <TableCell colSpan={5} align="center">
                     <CircularProgress size={24} sx={{ my: 3 }} />
+                  </TableCell>
+                </TableRow>
+              ) : filteredCustomers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    <Typography color="text.secondary" sx={{ py: 3 }}>
+                      {query ? 'Ningún cliente coincide con la búsqueda.' : 'Todavía no hay clientes registrados.'}
+                    </Typography>
                   </TableCell>
                 </TableRow>
               ) : (

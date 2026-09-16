@@ -579,6 +579,7 @@ export default function ServiceOrderDetail() {
                           </Box>
                           <IconButton
                             size="small"
+                            title="Eliminar foto"
                             onClick={() => setAttachmentToDelete({ id: photo.id, label: 'esta foto' })}
                             sx={{
                               position: 'absolute',
@@ -623,7 +624,7 @@ export default function ServiceOrderDetail() {
                             {doc.fileName}
                           </Typography>
                         </Stack>
-                        <IconButton size="small" onClick={() => setAttachmentToDelete({ id: doc.id, label: doc.fileName })}>
+                        <IconButton size="small" title="Eliminar documento" onClick={() => setAttachmentToDelete({ id: doc.id, label: doc.fileName })}>
                           <DeleteRoundedIcon fontSize="small" color="error" />
                         </IconButton>
                       </Stack>

@@ -6,6 +6,7 @@ import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -19,6 +20,7 @@ import { api } from 'api/client';
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', phone: '', email: '', notes: '' });
@@ -27,7 +29,8 @@ export default function Suppliers() {
     api
       .listSuppliers()
       .then(setSuppliers)
-      .catch(() => setError('No se pudo cargar proveedores.'));
+      .catch(() => setError('No se pudo cargar proveedores.'))
+      .finally(() => setLoading(false));
   useEffect(() => {
     load();
   }, []);
@@ -61,7 +64,16 @@ export default function Suppliers() {
       {error && <Alert severity="warning">{error}</Alert>}
       <MainCard title="Proveedores activos">
         <Stack spacing={1.5}>
-          {suppliers.map((supplier) => (
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : suppliers.length === 0 ? (
+            <Typography color="text.secondary" align="center" sx={{ py: 3 }}>
+              Todavía no hay proveedores registrados.
+            </Typography>
+          ) : (
+            suppliers.map((supplier) => (
             <Stack
               direction="row"
               spacing={2}
@@ -81,7 +93,8 @@ export default function Suppliers() {
                 {supplier._count.items} piezas
               </Typography>
             </Stack>
-          ))}
+            ))
+          )}
         </Stack>
       </MainCard>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">

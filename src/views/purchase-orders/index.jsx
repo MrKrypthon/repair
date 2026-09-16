@@ -5,6 +5,7 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -22,6 +23,7 @@ const emptyDraft = { inventoryItemId: '', quantity: 1, unitCost: '' };
 
 export default function PurchaseOrders() {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [suppliers, setSuppliers] = useState([]);
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
@@ -37,7 +39,8 @@ export default function PurchaseOrders() {
     api
       .listPurchaseOrders()
       .then(setOrders)
-      .catch(() => setError('No se pudieron cargar las órdenes de compra.'));
+      .catch(() => setError('No se pudieron cargar las órdenes de compra.'))
+      .finally(() => setLoading(false));
   useEffect(() => {
     load();
     api
@@ -113,7 +116,16 @@ export default function PurchaseOrders() {
       {error && <Alert severity="warning">{error}</Alert>}
       <MainCard title="Historial de compras">
         <Stack spacing={1.5}>
-          {orders.map((order) => (
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : orders.length === 0 ? (
+            <Typography color="text.secondary" align="center" sx={{ py: 3 }}>
+              Todavía no hay órdenes de compra registradas.
+            </Typography>
+          ) : (
+            orders.map((order) => (
             <Stack
               direction="row"
               spacing={2}
@@ -144,7 +156,8 @@ export default function PurchaseOrders() {
                 </Button>
               )}
             </Stack>
-          ))}
+            ))
+          )}
         </Stack>
       </MainCard>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
