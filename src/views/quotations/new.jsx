@@ -59,7 +59,7 @@ export default function NewQuotation() {
     api
       .listCustomers()
       .then(setCustomers)
-      .catch(() => setError('No se pudo cargar la lista de clientes. Inicia el backend para crear cotizaciones.'));
+      .catch(() => setError('No se pudo cargar la lista de clientes. Verifica tu conexión e intenta de nuevo.'));
   }, []);
   useEffect(() => {
     if (form.customer)
@@ -146,7 +146,7 @@ export default function NewQuotation() {
         window.setTimeout(() => navigate(`/quotations/${quotation.folio}`), 700);
       })
       .catch(() => {
-        setError('No se pudo crear la cotización. Revisa la conexión con el backend y los datos del formulario.');
+        setError('No se pudo crear la cotización. Revisa tu conexión y los datos del formulario.');
         setSaving(false);
       });
   };

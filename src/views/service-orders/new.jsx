@@ -51,7 +51,7 @@ export default function NewServiceOrder() {
     api
       .listCustomers()
       .then(setCustomers)
-      .catch(() => setError('No se pudo cargar la lista de clientes. Inicia el backend para crear órdenes.'));
+      .catch(() => setError('No se pudo cargar la lista de clientes. Verifica tu conexión e intenta de nuevo.'));
   }, []);
   useEffect(() => {
     if (form.customer)
@@ -103,7 +103,7 @@ export default function NewServiceOrder() {
         window.setTimeout(() => navigate('/service-orders'), 700);
       })
       .catch(() => {
-        setError('No se pudo crear la orden. Revisa la conexión con el backend y los datos del formulario.');
+        setError('No se pudo crear la orden. Revisa tu conexión y los datos del formulario.');
         setSaving(false);
       });
   };

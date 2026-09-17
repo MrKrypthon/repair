@@ -27,7 +27,7 @@ export default function NewCustomer() {
     api
       .createCustomer(form)
       .then(() => navigate('/customers'))
-      .catch(() => setError('No se pudo guardar el cliente. Verifica la conexión con el backend.'))
+      .catch(() => setError('No se pudo guardar el cliente. Verifica tu conexión e intenta de nuevo.'))
       .finally(() => setSaving(false));
   };
 

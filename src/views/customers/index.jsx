@@ -40,7 +40,7 @@ export default function Customers() {
     api
       .listCustomers()
       .then(setRecords)
-      .catch(() => setError('No se pudo conectar con la API. Verifica que el backend esté iniciado.'))
+      .catch(() => setError('No se pudo conectar con el servidor. Mostrando datos de ejemplo mientras se restablece la conexión.'))
       .finally(() => setLoading(false));
   }, []);
 
